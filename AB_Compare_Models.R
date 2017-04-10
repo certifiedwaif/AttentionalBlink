@@ -25,19 +25,19 @@ thisPath <- '/Users/experimentalmode/Documents/MATLAB/ABFinal/'
 
 # Provide a name for each sample,
 # so files can be read and written with corresponding filenames.
-sampleNames <- {'Warwick','MIT','Western','Berkeley','SydneyObject','SydneyWord'}
+sampleNames <- c('Warwick','MIT','Western','Berkeley','SydneyObject','SydneyWord')
 
 # Provide some properties of the data for each sample, in order.
-allRates <- [11.1 12 12 10 9.4 9.4]# Item rate (items/sec)
-allNParticipants <- [20 11 12 12 32 31]# Number of participants
-allNLags <- [10 10 10 7 7 7]# Number of lags
+allRates <- c(11.1, 12, 12, 10, 9.4, 9.4]# Item rate (items/sec)
+allNParticipants <- c(20, 11, 12, 12, 32, 31)# Number of participants
+allNLags <- c(10, 10, 10, 7, 7, 7)# Number of lags
 
 # Specify a set of standard lags (in ) for analysis across datasets. If
 # all sets have the same item rate and number of lags, this could just be
 # the list of lags multiplied by the inverse of item rate (i.e. the actual
 # lags in ms). If not, a sensible set of values that spans the range should
 # be specified.
-standardLags <- 100:100:800
+standardLags <- seq(from=100, to=800, by=100) # 100:100:800
 
 # Set the alpha value for t-tests
 alphaVal <- .05
@@ -71,12 +71,12 @@ windowMin <- -3
 windowMax <- +3
 
 # Set the colours used in the plots.
-plotColor <- {'r','c','k'}
-plotIcon <- {'ro-','cs:','ko-'}
+plotColor <- c('r','c','k')
+plotIcon <- c('ro-','cs:','ko-')
 thisRGB <- 1# Which RGB channel(s) correspond to the first color ('r')?
 
-sampleColor <- {'r','g','b','c','m','y'}
-sampleIcon <- {'r^-','go-','bp-','cs-','md-','yv-'}
+sampleColor <- c('r','g','b','c','m','y')
+sampleIcon <- c('r^-','go-','bp-','cs-','md-','yv-')
 zeroPointY <- -50# Y-value at which to show zero crossing
 modelAxes <- [-100 1100 -80 280]
 
@@ -95,11 +95,11 @@ allFactors <- 1000./allRates
 nSamples <- numel(sampleNames)
 
 # Make some matrices for keeping track of included and excluded models
-allIncluded_T1 <- zeros(1,nSamples)
-allIncluded_T2 <- zeros(1,nSamples)
-dumpedOnPrecisionLimit <- zeros(1,nSamples)
-dumpedOnLatencyLimit <- zeros(1,nSamples)
-dumpedOnEfficacyLimit <- zeros(1,nSamples)
+allIncluded_T1 <- matrix(0, 1, nSamples)
+allIncluded_T2 <- matrix(0, 1, nSamples)
+dumpedOnPrecisionLimit <- matrix(0, 1, nSamples)
+dumpedOnLatencyLimit <- matrix(0, 1, nSamples)
+dumpedOnEfficacyLimit <- matrix(0, 1, nSamples)
 
 # Make some matrices for storing individual data for analysis across
 # datasets. There is one set for each of accuracy, efficacy, latency and
@@ -108,13 +108,13 @@ dumpedOnEfficacyLimit <- zeros(1,nSamples)
 # dimensions are omitted for accuracy measures, because they don't rely on
 # the model or formula analyses.
 
-nStandardLags <- numel(standardLags)# Number of standard lags by
+nStandardLags <- length(standardLags)# Number of standard lags by
 nParticipantsTotal <- sum(allNParticipants)# Number of participants
 
-standardAccuracy <- NaN(nParticipantsTotal,nStandardLags,2)
-standardEfficacy <- NaN(nParticipantsTotal,nStandardLags,2,2)
-standardLatency <- NaN(nParticipantsTotal,nStandardLags,2,2)
-standardPrecision <- NaN(nParticipantsTotal,nStandardLags,2,2)
+standardAccuracy <- array(NA, c(nParticipantsTotal,nStandardLags,2))
+standardEfficacy <- array(NA, c(nParticipantsTotal,nStandardLags,2,2))
+standardLatency <- array(NA, c(nParticipantsTotal,nStandardLags,2,2))
+standardPrecision <- array(NA, c(nParticipantsTotal,nStandardLags,2,2))
 
 # Create a figure for plotting the difference in BIC between single-episode
 # and dual-episode models across all samples.
@@ -129,10 +129,10 @@ warning('off', 'MATLAB:interp1:NaNstrip')
 for (thisSample in 1:nSamples){
 
     # Fetch number of participants for this sample
-    nParticipants <- allNParticipants(thisSample)
+    nParticipants <- allNParticipants[thisSample]
 
     # Load data for the dual-episode model (M2)
-    cd([thisPath 'ModelOutput'])
+    cd(c(thisPath 'ModelOutput'))
     load(['ModelOutput_' sampleNames{thisSample} '_Dual.mat'])
 
     # Extract estimates for T2 parameters
@@ -145,8 +145,8 @@ for (thisSample in 1:nSamples){
     dualModelObs <- 2*nTrialsPerLag# 2x because there is a report for both T1 and T2 on each trial
 
     # Calculate lag parameters
-    lagFactor <- allFactors(thisSample)
-    nLags <- size(estimatesT2,2)
+    lagFactor <- allFactors[thisSample]
+    nLags <- ncol(estimatesT2)
     lagList <- lagFactor*(1:nLags)
 
     # Load data for the single-episode model (M2)
@@ -166,10 +166,10 @@ for (thisSample in 1:nSamples){
     # determine when there is evidence of a second attentional episode.
 
     # First, set up some empty matrices
-    allSingleBIC <- NaN(nParticipants,nLags)
-    allDualBIC <- NaN(nParticipants,nLags)
-    transitionPointByParticipant <- NaN(nParticipants,1)
-    transitionPointRaw <- NaN(nParticipants,1)
+    allSingleBIC <- matrix(NA, c(nParticipants,nLags))
+    allDualBIC <- matrix(NA, c(nParticipants,nLags))
+    transitionPointByParticipant <- matrix(NA, c(nParticipants,1))
+    transitionPointRaw <- matrix(NA, c(nParticipants,1))
 
     # Then do calculations for each participant
     for (thisParticipant in 1:nParticipants){
@@ -187,34 +187,35 @@ for (thisSample in 1:nSamples){
         # operator to determine which model to use at a certain lag.
         thisComparison <- singleBIC > dualBIC
         thisCompResult <- find(!thisComparison, 1, 'last') + 0.5
+        thisCompResult <- which(!thisComparison[length(thisComparison):1])[1] + 0.5
 
         # Allow for the possibility that M2 is never preferred
-        if (!isempty(thisCompResult)){
-            transitionPointByParticipant(thisParticipant) <- thisCompResult
+        if (length(thisCompResult) > 0) {
+            transitionPointByParticipant[thisParticipant] <- thisCompResult
         } else {
-            transitionPointByParticipant(thisParticipant) <- length(thisComparison) + 0.5
+            transitionPointByParticipant[thisParticipant] <- length(thisComparison) + 0.5
         }
 
         # Caluclate a non-quantized transition point for the purposes of
         # the meta-analysis. Because there, everything is mapped to a set
         # of standard lags.
-        modelDiff <- singleBIC-dualBIC){
-        zeroPoint <- find(modelDiff==0, 1)){# Just in case one happens to be exactly zero
+        modelDiff <- singleBIC-dualBIC)
+        zeroPoint <- find(modelDiff==0, 1)) # Just in case one happens to be exactly zero
 
-        if (transitionPointByParticipant(thisParticipant) == (length(thisComparison) + 0.5)){
+        if (transitionPointByParticipant(thisParticipant) == (length(thisComparison) + 0.5)) {
 
             transitionPointRaw(thisParticipant) <- transitionPointByParticipant(thisParticipant)
 
-        } else if (isempty(zeroPoint)){
+        } else if (isempty(zeroPoint)) {
 
             startLag <- round(thisCompResult - 0.5)
-            }Lag <- round(thisCompResult + 0.5)
-            thisSlope <- fit((startLag:}Lag)', modelDiff(startLag:}Lag)', 'poly1')){# Fit a linear function
-            transitionPointRaw(thisParticipant) <- -thisSlope.p2/thisSlope.p1# Get the intercept
+            endLag <- round(thisCompResult + 0.5)
+            thisSlope <- lm.fit(startLag:endLag, modelDiff[startLag:endLag]) # Fit a linear function
+            transitionPointRaw[thisParticipant] <- coef(thisSlope)[1] # Get the intercept
 
         } else {
 
-            transitionPointRaw(thisParticipant) <- zeroPoint
+            transitionPointRaw[thisParticipant] <- zeroPoint
 
         }
 
@@ -225,42 +226,42 @@ for (thisSample in 1:nSamples){
     hold on
 
     # Calculate means.
-    modelComlastLag <- nanmean(allSingleBIC-allDualBIC)
-    modelCompSD <- nanstd(allSingleBIC-allDualBIC)
+    modelComlastLag <- mean(allSingleBIC-allDualBIC, na.rm=TRUE)
+    modelCompSD <- sd(allSingleBIC-allDualBIC, na.rm=TRUE)
     modelCompSEM <- modelCompSD/sqrt(nParticipants)
 
     # Plot errorbars.
     for (thisLag in 1:nLags){
-        line(lagList(thisLag)*ones(1,2), [-modelCompSEM(thisLag) modelCompSEM(thisLag)]+modelComlastLag(thisLag), 'color', sampleColor{thisSample})
+        line(lagList(thisLag)*matrix(1,1,2), c(-modelCompSEM(thisLag), modelCompSEM(thisLag))+modelComlastLag(thisLag), 'color', sampleColor[thisSample])
     }
 
     # Plot icons.
-    plot(lagList,modelComlastLag,sampleIcon{thisSample})
+    plot(lagList,modelComlastLag,sampleIcon[thisSample])
 
     # Work out the zero point by linear interpolation.
-    zeroPoint <- lagList(find(modelComlastLag==0, 1))# Just in case one happens to be exactly zero
+    zeroPoint <- lagList[which(modelComlastLag==0)[1]]# Just in case one happens to be exactly zero
 
     if (isempty(zeroPoint)){
 
-        lastLag <- find(diff(sign(modelComlastLag)), 1)){# Find where negative becomes positive
-        thisSlope <- fit(lagList(lastLag:lastLag+1)', modelComlastLag(lastLag:lastLag+1)', 'poly1')# Fit a linear function
-        zeroPoint <- -thisSlope.p2/thisSlope.p1# Get the intercept
+        lastLag <- which(diff(sign(modelComlastLag)))[1] # Find where negative becomes positive
+        thisSlope <- lm.fit(lagList[lastLag:lastLag+1], modelComlastLag[lastLag:lastLag+1]) # Fit a linear function
+        zeroPoint <- coef(thisSlope)[1] # Get the intercept
 
     }
 
     # Plot the zero point.
-    line(zeroPoint*ones(1,2), [modelAxes(3) 0], 'color', sampleColor{thisSample}, 'LineStyle', ':')
+    line(zeroPoint*ones(1,2), c(modelAxes(3), 0), 'color', sampleColor{thisSample}, 'LineStyle', ':')
     plot(zeroPoint,zeroPointY,sampleIcon{thisSample})
 
     # Create matrices for storing final model parameters
-    allEfficacy_E1 <- NaN(nParticipants,nLags)
-    allEfficacy_E2 <- NaN(nParticipants,nLags)
+    allEfficacy_E1 <- matrix(NA, nParticipants, nLags)
+    allEfficacy_E2 <- matrix(NA, nParticipants, nLags)
 
-    allLatency_E1 <- NaN(nParticipants,nLags)
-    allLatency_E2 <- NaN(nParticipants,nLags)
+    allLatency_E1 <- matrix(NA, nParticipants, nLags)
+    allLatency_E2 <- matrix(NA, nParticipants, nLags)
 
-    allPrecision_E1 <- NaN(nParticipants,nLags)
-    allPrecision_E2 <- NaN(nParticipants,nLags)
+    allPrecision_E1 <- matrix(NA, nParticipants, nLags)
+    allPrecision_E2 <- matrix(NA, nParticipants, nLags)
 
     # Cycle through each lag and participant
     for (thisLag in 1:nLags){
@@ -278,24 +279,24 @@ for (thisSample in 1:nSamples){
             noGoodP <- abs(estimatesT1(thisParticipant,thisLag,3)) > precisionLimit
 
             # If they don't, add it to the tally of rejected models
-            noGood <- any([noGoodE noGoodL noGoodP])
+            noGood <- any(c(noGoodE, noGoodL, noGoodP))
             dumpedOnEfficacyLimit(thisSample) <- dumpedOnEfficacyLimit(thisSample) + noGoodE
             dumpedOnLatencyLimit(thisSample) <- dumpedOnLatencyLimit(thisSample) + noGoodL
             dumpedOnPrecisionLimit(thisSample) <- dumpedOnPrecisionLimit(thisSample) + noGoodP
 
             # Otherwise, include these as final model parameters
             if (!noGood){
-                allIncluded_T1(thisSample) <- allIncluded_T1(thisSample) + 1
-                allEfficacy_E1(thisParticipant,thisLag) <- estimatesT1(thisParticipant,thisLag,1)
-                allLatency_E1(thisParticipant,thisLag) <- estimatesT1(thisParticipant,thisLag,2)
-                allPrecision_E1(thisParticipant,thisLag) <- estimatesT1(thisParticipant,thisLag,3)
+                allIncluded_T1[thisSample] <- allIncluded_T1[thisSample] + 1
+                allEfficacy_E1[thisParticipant,thisLag] <- estimatesT1[thisParticipant,thisLag,1]
+                allLatency_E1[thisParticipant,thisLag] <- estimatesT1[thisParticipant,thisLag,2]
+                allPrecision_E1[thisParticipant,thisLag] <- estimatesT1[thisParticipant,thisLag,3]
             }
 
             # Next, check whether this lag is earlier than the
             # participant's transition point. If it is, then we don't enter
             # anything for the second episode.
 
-            if (thisLag > transitionPointByParticipant(thisParticipant)){
+            if (thisLag > transitionPointByParticipant[thisParticipant]) {
 
                 # There is evidence of a second episode.
 
@@ -304,30 +305,30 @@ for (thisSample in 1:nSamples){
                 # T2 episode estimates can get switched around. We take the
                 # later one to be T2.
 
-                if (estimatesT2(thisParticipant,thisLag,2) < estimatesT2(thisParticipant,thisLag,5)){
+                if (estimatesT2[thisParticipant,thisLag,2] < estimatesT2[thisParticipant,thisLag,5]) {
                     # Switch the T2 parameters into the first three cells
-                    estimatesT2(thisParticipant,thisLag,1) <- estimatesT2(thisParticipant,thisLag,4)
-                    estimatesT2(thisParticipant,thisLag,2) <- estimatesT2(thisParticipant,thisLag,5)
-                    estimatesT2(thisParticipant,thisLag,3) <- estimatesT2(thisParticipant,thisLag,6)
+                    estimatesT2[thisParticipant,thisLag,1] <- estimatesT2[thisParticipant,thisLag,4]
+                    estimatesT2[thisParticipant,thisLag,2] <- estimatesT2[thisParticipant,thisLag,5]
+                    estimatesT2[thisParticipant,thisLag,3] <- estimatesT2[thisParticipant,thisLag,6]
                 }
 
                 # Check all parameters satisfy the bounds set earlier
-                noGoodE <- abs(estimatesT2(thisParticipant,thisLag,1)) < efficacyLimit# Only check the T2 parameter here
-                noGoodL <- [abs(estimatesT2(thisParticipant,thisLag,2)) abs(estimatesT2(thisParticipant,thisLag,5)+listLags(thisLag))] > latencyLimit
-                noGoodP <- [abs(estimatesT2(thisParticipant,thisLag,3)) abs(estimatesT2(thisParticipant,thisLag,6))] > precisionLimit
+                noGoodE <- abs(estimatesT2[thisParticipant,thisLag,1]) < efficacyLimit# Only check the T2 parameter here
+                noGoodL <- c(abs(estimatesT2[thisParticipant,thisLag,2]), abs(estimatesT2[thisParticipant,thisLag,5)+listLags(thisLag))] > latencyLimit
+                noGoodP <- c(abs(estimatesT2[thisParticipant,thisLag,3]), abs(estimatesT2[thisParticipant,thisLag,6])) > precisionLimit
 
                 # If they don't, add it to the tally of rejected models
-                noGood <- any([noGoodE noGoodL noGoodP])
-                dumpedOnEfficacyLimit(thisSample) <- dumpedOnEfficacyLimit(thisSample) + any(noGoodE)
-                dumpedOnLatencyLimit(thisSample) <- dumpedOnLatencyLimit(thisSample) + any(noGoodL)
-                dumpedOnPrecisionLimit(thisSample) <- dumpedOnPrecisionLimit(thisSample) + any(noGoodP)
+                noGood <- any(c(noGoodE, noGoodL, noGoodP)
+                dumpedOnEfficacyLimit[thisSample] <- dumpedOnEfficacyLimit[thisSample] + any(noGoodE)
+                dumpedOnLatencyLimit[thisSample] <- dumpedOnLatencyLimit[thisSample] + any(noGoodL)
+                dumpedOnPrecisionLimit[thisSample] <- dumpedOnPrecisionLimit[thisSample] + any(noGoodP)
 
                 # Otherwise, include these as final model parameters
                 if (!noGood){
-                    allIncluded_T2(thisSample) <- allIncluded_T2(thisSample) + 1
-                    allEfficacy_E2(thisParticipant,thisLag) <- estimatesT2(thisParticipant,thisLag,1)
-                    allLatency_E2(thisParticipant,thisLag) <- estimatesT2(thisParticipant,thisLag,2)
-                    allPrecision_E2(thisParticipant,thisLag) <- estimatesT2(thisParticipant,thisLag,3)
+                    allIncluded_T2[thisSample] <- allIncluded_T2[thisSample] + 1
+                    allEfficacy_E2[thisParticipant,thisLag] <- estimatesT2[thisParticipant,thisLag,1]
+                    allLatency_E2[thisParticipant,thisLag] <- estimatesT2[thisParticipant,thisLag,2]
+                    allPrecision_E2[thisParticipant,thisLag] <- estimatesT2[thisParticipant,thisLag,3]
                 }
 
             }
@@ -346,14 +347,14 @@ for (thisSample in 1:nSamples){
         T2_precision <- allPrecision_E2*lagFactor
 
         # Calculate mean parameters across participants.
-        T2_efficacy_M <- nanmean(T2_efficacy)
-        T2_latency_M <- nanmean(T2_latency)
-        T2_precision_M <- nanmean(T2_precision)
+        T2_efficacy_M <- mean(T2_efficacy, na.rm=TRUE)
+        T2_latency_M <- mean(T2_latency, na.rm=TRUE)
+        T2_precision_M <- mean(T2_precision, na.rm=TRUE)
 
         # Calculate standard deviations across participants.
-        T2_efficacy_SD <- nanstd(T2_efficacy)
-        T2_latency_SD <- nanstd(T2_latency)
-        T2_precision_SD <- nanstd(T2_precision)
+        T2_efficacy_SD <- sd(T2_efficacy, na.rm=TRUE)
+        T2_latency_SD <- sd(T2_latency, na.rm=TRUE)
+        T2_precision_SD <- sd(T2_precision, na.rm=TRUE)
 
         # Tally the number of participants contributing to these means.
         T2_nEstimates <- sum(!isnan(T2_efficacy))
@@ -361,12 +362,12 @@ for (thisSample in 1:nSamples){
         # Ensure that the number of participants meets the criterion set above,
         # otherwise set the means and standard deviations as undefined.
         minMet <- T2_nEstimates > minEstimates
-        T2_efficacy_M(!minMet) <- NaN
-        T2_latency_M(!minMet) <- NaN
-        T2_precision_M(!minMet) <- NaN
-        T2_efficacy_SD(!minMet) <- NaN
-        T2_latency_SD(!minMet) <- NaN
-        T2_precision_SD(!minMet) <- NaN
+        T2_efficacy_M(!minMet) <- NA
+        T2_latency_M(!minMet) <- NA
+        T2_precision_M(!minMet) <- NA
+        T2_efficacy_SD(!minMet) <- NA
+        T2_latency_SD(!minMet) <- NA
+        T2_precision_SD(!minMet) <- NA
 
         # Calculate the standard error of the mean.
         T2_efficacy_SEM <- T2_efficacy_SD./sqrt(T2_nEstimates)
@@ -382,14 +383,14 @@ for (thisSample in 1:nSamples){
         T1_precision <- allPrecision_E1*lagFactor
 
         # Calculate mean parameters across participants.
-        T1_efficacy_M <- nanmean(T1_efficacy)
-        T1_latency_M <- nanmean(T1_latency)
-        T1_precision_M <- nanmean(T1_precision)
+        T1_efficacy_M <- mean(T1_efficacy, na.rm=TRUE)
+        T1_latency_M <- mean(T1_latency, na.rm=TRUE)
+        T1_precision_M <- mean(T1_precision, na.rm=TRUE)
 
         # Calculate standard deviations across participants.
-        T1_efficacy_SD <- nanstd(T1_efficacy)
-        T1_latency_SD <- nanstd(T1_latency)
-        T1_precision_SD <- nanstd(T1_precision)
+        T1_efficacy_SD <- sd(T1_efficacy, na.rm=TRUE)
+        T1_latency_SD <- sd(T1_latency, na.rm=TRUE)
+        T1_precision_SD <- sd(T1_precision, na.rm=TRUE)
 
         # Tally the number of participants contributing to these means.
         T1_nEstimates <- sum(!isnan(T1_efficacy))
@@ -397,12 +398,12 @@ for (thisSample in 1:nSamples){
         # Ensure that the number of participants meets the criterion set above,
         # otherwise set the means and standard deviations as undefined.
         minMet <- T1_nEstimates > minEstimates
-        T1_efficacy_M(!minMet) <- NaN
-        T1_latency_M(!minMet) <- NaN
-        T1_precision_M(!minMet) <- NaN
-        T1_efficacy_SD(!minMet) <- NaN
-        T1_latency_SD(!minMet) <- NaN
-        T1_precision_SD(!minMet) <- NaN
+        T1_efficacy_M[!minMet] <- NA
+        T1_latency_M[!minMet] <- NA
+        T1_precision_M[!minMet] <- NA
+        T1_efficacy_SD[!minMet] <- NA
+        T1_latency_SD[!minMet] <- NA
+        T1_precision_SD[!minMet] <- NA
 
         # Calculate the standard error of the mean.
         T1_efficacy_SEM <- T1_efficacy_SD./sqrt(T1_nEstimates)
@@ -415,28 +416,28 @@ for (thisSample in 1:nSamples){
     # the T1 parameter at the longest lag.
 
     # Create empty matrices to store p-values
-    pVals_E <- NaN(1,nLags)
-    pVals_L <- NaN(1,nLags)
-    pVals_P <- NaN(1,nLags)
+    pVals_E <- matrix(NA, 1, nLags)
+    pVals_L <- matrix(NA, 1, nLags)
+    pVals_P <- matrix(NA, 1, nLags)
 
     # Cycle through each lag to conduct the t-tests
     for (thisLag in 1:nLags){
 
         # Check first to make sure there is more than one estimate, so that
         # a t-test can be conducted.
-        if (sum( !isnan(T2_efficacy(:,thisLag)) & !isnan(nanmean(T1_efficacy,2)) ) > 1){
+        if (sum( !is.nan(T2_efficacy(:,thisLag)) & !is.nan(nanmean(T1_efficacy,2)) ) > 1){
 
             # Efficacy t-test
             [h,p] <- ttest(T2_efficacy(:,thisLag),nanmean(T1_efficacy,2))
-            pVals_E(thisLag) <- p
+            pVals_E[thisLag] <- p
 
             # Latency t-test
             [h,p] <- ttest(T2_latency(:,thisLag),nanmean(T1_latency,2))
-            pVals_L(thisLag) <- p
+            pVals_L[thisLag] <- p
 
             # Precision t-test
             [h,p] <- ttest(T2_precision(:,thisLag),nanmean(T1_precision,2))
-            pVals_P(thisLag) <- p
+            pVals_P[thisLag] <- p
 
         }
 
@@ -517,18 +518,18 @@ for (thisSample in 1:nSamples){
 
         # Draw the errorbars, with darkness indicating the proportion of
         # participants contributing to the estimate.
-        lagColors <- 1-repmat((T1_nEstimates/nParticipants)',1,3)
-        lagColors(:,thisRGB) <- ones(size(lagColors(:,thisRGB)))
+        lagColors <- 1-matrix((T1_nEstimates/nParticipants),1,3)
+        lagColors[,thisRGB] <- rep(1, length(lagColors[,thisRGB]))
 
         for (thisLag in 1:nLags){
-            line([lagList(thisLag) lagList(thisLag)],T1_efficacy_SEM(thisLag)*[-1 1]+T1_efficacy_M(thisLag), 'Color', lagColors(thisLag,:))
+            line([lagList(thisLag) lagList(thisLag)],T1_efficacy_SEM[thisLag]*[-1 1]+T1_efficacy_M[thisLag], 'Color', lagColors[thisLag,])
         }
 
         # Draw the lines joining icons for each lag.
         for (thisLag in 1:nLags-1){
-            lagColor <- ones(1,3)*1-(T1_nEstimates(thisLag)/nParticipants)
+            lagColor <- rep(1,,1,3)*1-(T1_nEstimates(thisLag)/nParticipants)
             lagColor(thisRGB) <- 1
-            line([lagList(thisLag) lagList(thisLag+1)],[T1_efficacy_M(thisLag) T1_efficacy_M(thisLag+1)], 'Color', lagColors(thisLag,:))
+            line([lagList(thisLag) lagList(thisLag+1)],[T1_efficacy_M(thisLag) T1_efficacy_M(thisLag+1)], 'Color', lagColors[thisLag,,])
         }
 
         # Draw the icons for each lag.
@@ -540,12 +541,12 @@ for (thisSample in 1:nSamples){
 
         # Draw the errorbars for each lag.
         for (thisLag in 1:nLags){
-            line([lagList(thisLag) lagList(thisLag)],T1_latency_SEM(thisLag)*[-1 1]+T1_latency_M(thisLag), 'Color', lagColors(thisLag,:))
+            line(c(lagList[thisLag], lagList[thisLag]), T1_latency_SEM(thisLag)*c(-1, 1)+T1_latency_M[thisLag], 'Color', lagColors[thisLag,])
         }
 
         # Draw the lines joining icons for each lag.
         for (thisLag in 1:nLags-1){
-            line([lagList(thisLag) lagList(thisLag+1)],[T1_latency_M(thisLag) T1_latency_M(thisLag+1)], 'Color', lagColors(thisLag,:))
+            line(c(lagList(thisLag), lagList(thisLag+1)),c(T1_latency_M(thisLag), T1_latency_M(thisLag+1)), 'Color', lagColors[thisLag,])
         }
 
         # Draw the icons for each lag.
@@ -557,7 +558,7 @@ for (thisSample in 1:nSamples){
 
         # Draw the errorbars for each lag.
         for (thisLag in 1:nLags){
-            line([lagList(thisLag) lagList(thisLag)],T1_precision_SEM(thisLag)*[-1 1]+T1_precision_M(thisLag), 'Color', lagColors(thisLag,:))
+            line([lagList[thisLag] lagList[thisLag]],T1_precision_SEM[thisLag]*c(-1, 1)+T1_precision_M[thisLag], 'Color', lagColors[thisLag,])
         }
 
         # Draw the lines joining icons for each lag.
@@ -581,16 +582,16 @@ for (thisSample in 1:nSamples){
 
         # Draw the errorbars, with darkness indicating the proportion of
         # participants contributing to the estimate.
-        lagColors <- 1-repmat((T2_nEstimates/nParticipants)',1,3)
-        lagColors(:,thisRGB) <- ones(size(lagColors(:,thisRGB)))
+        lagColors <- 1-matrix((T2_nEstimates/nParticipants),1,3)
+        lagColors[,thisRGB] <- matrix(1, length(lagColors[,thisRGB]), 1)
 
         for (thisLag in 1:nLags){
-            line([lagList(thisLag) lagList(thisLag)],T2_efficacy_SEM(thisLag)*[-1 1]+T2_efficacy_M(thisLag), 'Color', lagColors(thisLag,:))
+            line(c(lagList[thisLag], lagList[thisLag]),T2_efficacy_SEM[thisLag]*c(-1, 1)+T2_efficacy_M[thisLag], 'Color', lagColors[thisLag,])
         }
 
         # Draw the lines joining icons for each lag.
         for (thisLag in 1:nLags-1){
-            line([lagList(thisLag) lagList(thisLag+1)],[T2_efficacy_M(thisLag) T2_efficacy_M(thisLag+1)], 'Color', lagColors(thisLag,:))
+            line(c(lagList[thisLag], lagList[thisLag+1]),c(T2_efficacy_M[thisLag], T2_efficacy_M[thisLag+1]), 'Color', lagColors[thisLag,])
         }
 
         # Draw the icons for each lag.
@@ -602,12 +603,12 @@ for (thisSample in 1:nSamples){
 
         # Draw the errorbars for each lag.
         for (thisLag in 1:nLags){
-            line([lagList(thisLag) lagList(thisLag)],T2_latency_SEM(thisLag)*[-1 1]+T2_latency_M(thisLag), 'Color', lagColors(thisLag,:))
+            line(c(lagList[thisLag], lagList[thisLag]),T2_latency_SEM[thisLag]*c(-1, 1)+T2_latency_M[thisLag], 'Color', lagColors[thisLag,])
         }
 
         # Draw the lines joining icons for each lag.
         for (thisLag in 1:nLags-1){
-            line([lagList(thisLag) lagList(thisLag+1)],[T2_latency_M(thisLag) T2_latency_M(thisLag+1)], 'Color', lagColors(thisLag,:))
+            line(c(lagList[thisLag], lagList[thisLag+1]), c(T2_latency_M(thisLag), T2_latency_M(thisLag+1)), 'Color', lagColors[thisLag,])
         }
 
         # Draw the icons for each lag.
@@ -619,12 +620,12 @@ for (thisSample in 1:nSamples){
 
         # Draw the errorbars for each lag.
         for (thisLag in 1:nLags){
-            line([lagList(thisLag) lagList(thisLag)],T2_precision_SEM(thisLag)*[-1 1]+T2_precision_M(thisLag), 'Color', lagColors(thisLag,:))
+            line(c(lagList(thisLag), lagList(thisLag)),T2_precision_SEM[thisLag]*c(-1, 1)+T2_precision_M[thisLag], 'Color', lagColors[thisLag,])
         }
 
         # Draw the lines joining icons for each lag.
         for (thisLag in 1:nLags-1){
-                line([lagList(thisLag) lagList(thisLag+1)],[T2_precision_M(thisLag) T2_precision_M(thisLag+1)], 'Color', lagColors(thisLag,:))
+            line(c(lagList[thisLag], lagList[thisLag+1]),c(T2_precision_M[thisLag], T2_precision_M[thisLag+1]), 'Color', lagColors[thisLag,])
         }
 
         # Draw the icons for each lag.
@@ -641,56 +642,56 @@ for (thisSample in 1:nSamples){
 
     # Calculate the size of the analysis window.
     windowEls <- windowMin:windowMax
-    nWindow <- numel(windowEls)
+    nWindow <- length(windowEls)
 
     # Create some matrices to store parameter estimates
-    T1Efficacy <- NaN(nParticipants,nLags)
-    T2Efficacy <- NaN(nParticipants,nLags)
-    T1Latency <- NaN(nParticipants,nLags)
-    T2Latency <- NaN(nParticipants,nLags)
-    T1Precision <- NaN(nParticipants,nLags)
-    T2Precision <- NaN(nParticipants,nLags)
-    T1Performance in NaN(nParticipants,nLags)){
-    T2Performance in NaN(nParticipants,nLags)){
-    T2GivenT1Performance in NaN(nParticipants,nLags)){
+    T1Efficacy <- matrix(NA, nParticipants,nLags)
+    T2Efficacy <- matrix(NA, nParticipants,nLags)
+    T1Latency <- matrix(NA, nParticipants,nLags)
+    T2Latency <- matrix(NA, nParticipants,nLags)
+    T1Precision <- matrix(NA, nParticipants,nLags)
+    T2Precision <- matrix(NA, nParticipants,nLags)
+    T1Performance <- matrix(NA, nParticipants,nLags)
+    T2Performance <- matrix(NA, nParticipants,nLags)
+    T2GivenT1Performance <- matrix(NA, nParticipants,nLags)
 
     # Cycle through each participant
     for (thisParticipant in 1:nParticipants){
 
         # Extract the relevant lags, T1 errors and T2 errors
-        theseLags <- allLags(thisParticipant,:,:)
-        theseT1Error <- allT1Error(thisParticipant,:,:)
-        theseT2Error <- allT2Error(thisParticipant,:,:)
+        theseLags <- allLags[thisParticipant,,]
+        theseT1Error <- allT1Error[thisParticipant,,]
+        theseT2Error <- allT2Error[thisParticipant,,]
 
         # Cycle through each lag
-        for (thisLag in 1:nLags){
+        for (thisLag in 1:nLags) {
 
             # Extract the relevant T1 and T2 errors for this lag
-            lagT1Error <- theseT1Error(theseLags==thisLag)
-            lagT2Error <- theseT2Error(theseLags==thisLag)
+            lagT1Error <- theseT1Error[theseLags==thisLag]
+            lagT2Error <- theseT2Error[theseLags==thisLag]
 
             # Calculate how many data points are there
-            nError <- numel(lagT1Error)
+            nError <- length(lagT1Error)
 
             # Calculate efficacy. This is the proportion of errors that
             # fall within the defined window. Vul et al. normalise this by
             # the size of the selection window (i.e. our variable nWindow),
             # but we leave out this step for better compatibility with our
             # efficacy measure.
-            T1Efficacy(thisParticipant,thisLag) <- sum((lagT1Error>=windowMin)&(lagT1Error<=windowMax))/nError
-            T2Efficacy(thisParticipant,thisLag) <- sum((lagT2Error>=windowMin)&(lagT2Error<=windowMax))/nError
+            T1Efficacy[thisParticipant,thisLag] <- sum((lagT1Error>=windowMin)&(lagT1Error<=windowMax))/nError
+            T2Efficacy[thisParticipant,thisLag] <- sum((lagT2Error>=windowMin)&(lagT2Error<=windowMax))/nError
 
             # Calculate latency. This is the mean of errors in the defined
             # window.
-            T1Latency(thisParticipant,thisLag) <- mean(lagT1Error((lagT1Error>=windowMin)&(lagT1Error<=windowMax)))
-            T2Latency(thisParticipant,thisLag) <- mean(lagT2Error((lagT2Error>=windowMin)&(lagT2Error<=windowMax)))
+            T1Latency[thisParticipant,thisLag] <- mean(lagT1Error((lagT1Error>=windowMin)&(lagT1Error<=windowMax)))
+            T2Latency[thisParticipant,thisLag] <- mean(lagT2Error((lagT2Error>=windowMin)&(lagT2Error<=windowMax)))
 
             # Calculate precision. This is the standard deviation of errors
             # in the defined window. Vul et al. report the variance (i.e.
             # the square of the standard deviation), but we leave out this
             # step for better compatibility with our precision measure.
-            T1Precision(thisParticipant,thisLag) <- std(lagT1Error((lagT1Error>=windowMin)&(lagT1Error<=windowMax)))
-            T2Precision(thisParticipant,thisLag) <- std(lagT2Error((lagT2Error>=windowMin)&(lagT2Error<=windowMax)))
+            T1Precision[thisParticipant,thisLag] <- std(lagT1Error((lagT1Error>=windowMin)&(lagT1Error<=windowMax)))
+            T2Precision[thisParticipant,thisLag] <- std(lagT2Error((lagT2Error>=windowMin)&(lagT2Error<=windowMax)))
 
             # Calculate the number of exactly correct responses.
             T1Correct <- sum(lagT1Error==0)
@@ -698,10 +699,9 @@ for (thisSample in 1:nSamples){
             T2GivenT1 <- sum((lagT1Error==0)&(lagT2Error==0))
 
             # Calculate the proportion of exactly correct responses.
-            T1Performance(thisParticipant,thisLag) in T1Correct/nError){
-            T2Performance(thisParticipant,thisLag) in T2Correct/nError){
-            T2GivenT1Performance(thisParticipant,thisLag) in T2GivenT1/T1Correct){
-
+            T1Performance[thisParticipant,thisLag] <- T1Correct/nError)
+            T2Performance[thisParticipant,thisLag] <- T2Correct/nError)
+            T2GivenT1Performance[thisParticipant,thisLag]] <- T2GivenT1/T1Correct)
         }
 
     }
@@ -714,74 +714,74 @@ for (thisSample in 1:nSamples){
 
     # Calculate mean, SD and SEM across participants for T1 efficacy.
     T1EfficacyM <- mean(T1Efficacy)
-    T1EfficacySD <- std(T1Efficacy)
+    T1EfficacySD <- sd(T1Efficacy)
     T1EfficacySEM <- T1EfficacySD/sqrt(nParticipants)
 
     # Calculate mean, SD and SEM across participants for T2 efficacy.
     T2EfficacyM <- mean(T2Efficacy)
-    T2EfficacySD <- std(T2Efficacy)
+    T2EfficacySD <- sd(T2Efficacy)
     T2EfficacySEM <- T2EfficacySD/sqrt(nParticipants)
 
     # Calculate mean, SD and SEM across participants for T1 latency.
     T1LatencyM <- mean(T1Latency)
-    T1LatencySD <- std(T1Latency)
+    T1LatencySD <- sd(T1Latency)
     T1LatencySEM <- T1LatencySD/sqrt(nParticipants)
 
     # Calculate mean, SD and SEM across participants for T2 latency.
     T2LatencyM <- mean(T2Latency)
-    T2LatencySD <- std(T2Latency)
+    T2LatencySD <- sd(T2Latency)
     T2LatencySEM <- T2LatencySD/sqrt(nParticipants)
 
     # Calculate mean, SD and SEM across participants for T1 precision.
     T1PrecisionM <- mean(T1Precision)
-    T1PrecisionSD <- std(T1Precision)
+    T1PrecisionSD <- sd(T1Precision)
     T1PrecisionSEM <- T1PrecisionSD/sqrt(nParticipants)
 
     # Calculate mean, SD and SEM across participants for T2 precision.
     T2PrecisionM <- mean(T2Precision)
-    T2PrecisionSD <- std(T2Precision)
+    T2PrecisionSD <- sd(T2Precision)
     T2PrecisionSEM <- T2PrecisionSD/sqrt(nParticipants)
 
     # Calculate mean, SD and SEM across participants for T1 performance
     # (exactly correct reports).
-    T1PerformanceM in mean(T1Performance)){
-    T1PerformanceSD in std(T1Performance)){
-    T1PerformanceSEM in T1PerformanceSD/sqrt(nParticipants)){
+    T1PerformanceM <- mean(T1Performance)){
+    T1PerformanceSD <- sd(T1Performance)){
+    T1PerformanceSEM <- T1PerformanceSD/sqrt(nParticipants)){
 
     # Calculate mean, SD and SEM across participants for T2 contingent
     # performance (T2 given T1 is correct).
-    T2GivenT1PerformanceM in mean(T2GivenT1Performance)){
-    T2GivenT1PerformanceSD in std(T2GivenT1Performance)){
-    T2GivenT1PerformanceSEM in T2GivenT1PerformanceSD/sqrt(nParticipants)){
+    T2GivenT1PerformanceM <- mean(T2GivenT1Performance)){
+    T2GivenT1PerformanceSD <- sd(T2GivenT1Performance)){
+    T2GivenT1PerformanceSEM <- T2GivenT1PerformanceSD/sqrt(nParticipants)){
 
 
     # Conduct t-tests as a rough guide to whether the parameter estimates
     # for T2 at each lag differ from a T1 baseline.
 
     # Create empty matrices to store p-values
-    pVals <- NaN(1,nLags)
-    pVals_E <- NaN(1,nLags)
-    pVals_L <- NaN(1,nLags)
-    pVals_P <- NaN(1,nLags)
+    pVals <- matrix(NA, 1, nLags)
+    pVals_E <- matrix(NA, 1, nLags)
+    pVals_L <- matrix(NA, 1, nLags)
+    pVals_P <- matrix(NA, 1, nLags)
 
     # Cycle through each lag to conduct the t-tests
     for (thisLag in 1:nLags){
 
         # T2 contingent accuracy t-test
-        [h,p] in ttest(T2GivenT1Performance(:,thisLag),nanmean(T1Performance,2))){
-        pVals(thisLag) <- p
+        [h,p] <- ttest(T2GivenT1Performance(:,thisLag),nanmean(T1Performance,2))){
+        pVals[thisLag] <- p
 
         # Efficacy t-test
         [h,p] <- ttest(T2Efficacy(:,thisLag),nanmean(T1Efficacy,2))
-        pVals_E(thisLag) <- p
+        pVals_E[thisLag] <- p
 
         # Latency t-test
         [h,p] <- ttest(T2Latency(:,thisLag),nanmean(T1Latency,2))
-        pVals_L(thisLag) <- p
+        pVals_L[thisLag] <- p
 
         # Precision t-test
         [h,p] <- ttest(T2Precision(:,thisLag),nanmean(T1Precision,2))
-        pVals_P(thisLag) <- p
+        pVals_P[thisLag] <- p
 
     }
 
@@ -879,7 +879,7 @@ for (thisSample in 1:nSamples){
 
         # Draw errorbars
         for (thisLag in 1:nLags){
-           line([lagList(thisLag) lagList(thisLag)],T1EfficacySEM(thisLag)*[-1 1]+T1EfficacyM(thisLag), 'Color', plotColor{2})
+           line(c(lagList[thisLag], lagList[thisLag]),T1EfficacySEM[thisLag]*c(-1, 1)+T1EfficacyM(thisLag), 'Color', plotColor{2})
         }
 
         # Plot parameter estimates
@@ -897,7 +897,7 @@ for (thisSample in 1:nSamples){
 
         # Draw errorbars
         for (thisLag in 1:nLags){
-            line([lagList(thisLag) lagList(thisLag)],T1LatencySEM(thisLag)*[-1 1]+T1LatencyM(thisLag), 'Color', plotColor{2})
+            line(c(lagList[thisLag], lagList[thisLag]),T1LatencySEM[thisLag]*c(-1, 1)+T1LatencyM[thisLag], 'Color', plotColor[2])
         }
 
         # Plot parameter estimates
@@ -915,7 +915,7 @@ for (thisSample in 1:nSamples){
 
         # Draw errorbars
         for (thisLag in 1:nLags){
-            line([lagList(thisLag) lagList(thisLag)],T1PrecisionSEM(thisLag)*[-1 1]+T1PrecisionM(thisLag), 'Color', plotColor{2})
+            line(c(lagList[thisLag], lagList[thisLag]),T1PrecisionSEM[thisLag]*c(-1, 1)+T1PrecisionM[thisLag], 'Color', plotColor[2])
         }
 
         # Plot parameter estimates
@@ -933,11 +933,11 @@ for (thisSample in 1:nSamples){
 
         # Draw errorbars
         for (thisLag in 1:nLags){
-            line([lagList(thisLag) lagList(thisLag)],T1PerformanceSEM(thisLag)*[-1 1]+T1PerformanceM(thisLag), 'Color', plotColor{3})){
+            line(c(lagList[thisLag], lagList[thisLag]),T1PerformanceSEM[thisLag]*c(-1, 1)+T1PerformanceM[thisLag], 'Color', plotColor[3]))
         }
 
         # Plot parameter estimates
-        plot(lagList,T1PerformanceM,plotIcon{3})){
+        plot(lagList,T1PerformanceM,plotIcon{3})
 
         # Set axis properties
         axis([-100 1100 -0.1 1.1])
@@ -958,7 +958,7 @@ for (thisSample in 1:nSamples){
 
         # Draw errorbars
         for (thisLag in 1:nLags){
-           line([lagList(thisLag) lagList(thisLag)],T2EfficacySEM(thisLag)*[-1 1]+T2EfficacyM(thisLag), 'Color', plotColor{2})
+           line(c(lagList[thisLag], lagList[thisLag]), T2EfficacySEM[thisLag]*c(-1, 1)+T2EfficacyM[thisLag], 'Color', plotColor{2})
         }
 
         # Plot parameter estimates
@@ -976,7 +976,7 @@ for (thisSample in 1:nSamples){
 
         # Draw errorbars
         for (thisLag in 1:nLags){
-            line([lagList(thisLag) lagList(thisLag)],T2LatencySEM(thisLag)*[-1 1]+T2LatencyM(thisLag), 'Color', plotColor{2})
+            line(c(lagList[thisLag], lagList[thisLag]), T2LatencySEM[thisLag]*c(-1, 1)+T2LatencyM[thisLag], 'Color', plotColor{2})
         }
 
         # Plot parameter estimates
@@ -994,7 +994,7 @@ for (thisSample in 1:nSamples){
 
         # Draw errorbars
         for (thisLag in 1:nLags){
-            line([lagList(thisLag) lagList(thisLag)],T2PrecisionSEM(thisLag)*[-1 1]+T2PrecisionM(thisLag), 'Color', plotColor{2})
+            line(c(lagList[thisLag], lagList[thisLag]),T2PrecisionSEM[thisLag]*c(-1, 1)+T2PrecisionM[thisLag], 'Color', plotColor{2})
         }
 
         # Plot parameter estimates
@@ -1012,7 +1012,7 @@ for (thisSample in 1:nSamples){
 
         # Draw errorbars
         for (thisLag in 1:nLags){
-            line([lagList(thisLag) lagList(thisLag)],T2GivenT1PerformanceSEM(thisLag)*[-1 1]+T2GivenT1PerformanceM(thisLag), 'Color', plotColor{3})){
+            line(c(lagList[thisLag], lagList[thisLag]),T2GivenT1PerformanceSEM[thisLag]*c(-1, 1)+T2GivenT1PerformanceM[thisLag], 'Color', plotColor{3})
         }
 
         # Plot parameter estimates
@@ -1026,16 +1026,16 @@ for (thisSample in 1:nSamples){
 
     # Calculate values for meta-analysis. Use cubic interpolation for lags
     # between those actually tested.
-    theseParticipants <- (1:nParticipants) + sum(allNParticipants(1:thisSample-1))
+    theseParticipants <- (1:nParticipants) + sum(allNParticipants[1:thisSample-1])
 
     for (thisParticipant in 1:nParticipants){
 
-      standardAccuracy(theseParticipants(thisParticipant),:,1) in interp1(lagList,T1Performance(thisParticipant,:),standardLags,interpType)){
-      standardAccuracy(theseParticipants(thisParticipant),:,2) in interp1(lagList,T2GivenT1Performance(thisParticipant,:),standardLags,interpType)){
+      standardAccuracy[theseParticipants[thisParticipant],:,1] <- interp1(lagList,T1Performance(thisParticipant,:),standardLags,interpType)){
+      standardAccuracy[theseParticipants[thisParticipant],:,2] <- interp1(lagList,T2GivenT1Performance(thisParticipant,:),standardLags,interpType)){
 
-      standardEfficacy(theseParticipants(thisParticipant),:,1,1) <- interp1(lagList,T1_efficacy(thisParticipant,:),standardLags,interpType)
-      standardLatency(theseParticipants(thisParticipant),:,1,1) <- interp1(lagList,T1_latency(thisParticipant,:),standardLags,interpType)
-      standardPrecision(theseParticipants(thisParticipant),:,1,1) <- interp1(lagList,T1_precision(thisParticipant,:),standardLags,interpType)
+      standardEfficacy[theseParticipants[thisParticipant],:,1,1] <- interp1(lagList,T1_efficacy[thisParticipant,:],standardLags,interpType)
+      standardLatency[theseParticipants[thisParticipant],:,1,1] <- interp1(lagList,T1_latency[thisParticipant,:],standardLags,interpType)
+      standardPrecision[theseParticipants[thisParticipant],:,1,1] <- interp1(lagList,T1_precision[thisParticipant,:],standardLags,interpType)
 
       # Do a quick check to make sure that values aren't all NaNs,
       # otherwise we'll get an error here.
