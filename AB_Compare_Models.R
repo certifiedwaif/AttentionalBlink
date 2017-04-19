@@ -768,19 +768,19 @@ for (thisSample in 1:nSamples){
     for (thisLag in 1:nLags){
 
         # T2 contingent accuracy t-test
-        [h,p] <- ttest(T2GivenT1Performance(:,thisLag),nanmean(T1Performance,2))){
+        [h,p] <- t.test(T2GivenT1Performance[,thisLag],mean(T1Performance,2))){
         pVals[thisLag] <- p
 
         # Efficacy t-test
-        [h,p] <- ttest(T2Efficacy(:,thisLag),nanmean(T1Efficacy,2))
+        [h,p] <- t.test(T2Efficacy[,thisLag],mean(T1Efficacy,2))
         pVals_E[thisLag] <- p
 
         # Latency t-test
-        [h,p] <- ttest(T2Latency(:,thisLag),nanmean(T1Latency,2))
+        [h,p] <- t.test(T2Latency[,thisLag],mean(T1Latency,2))
         pVals_L[thisLag] <- p
 
         # Precision t-test
-        [h,p] <- ttest(T2Precision(:,thisLag),nanmean(T1Precision,2))
+        [h,p] <- t.test(T2Precision[,thisLag],mean(T1Precision,2))
         pVals_P[thisLag] <- p
 
     }
@@ -789,82 +789,82 @@ for (thisSample in 1:nSamples){
     # This section contains code for printing the outcome of these t-tests
     # to the command window.
 
-    fprintf('\nContingent Accuracy\n')
+    cat('\nContingent Accuracy\n')
 
     for (thisL in 1:nLags){
-        fprintf('\t| Lag %d', thisL)
+        cat('\t| Lag %d', thisL)
     }
-    fprintf('\t|\n')
+    cat('\t|\n')
 
-    fprintf('P')
+    cat('P')
     for (thisL in 1:nLags){
-        fprintf('\t| %.3f', pVals(thisL))
+        cat('\t| %.3f', pVals[thisL])
     }
-    fprintf('\t|\n')
+    cat('\t|\n')
 
-    fprintf('H')
+    cat('H')
     for (thisL in 1:nLags){
-        fprintf('\t| %d ', pVals(thisL) < alphaVal)
+        cat('\t| %d ', pVals[thisL] < alphaVal)
     }
-    fprintf('\t|\n')
+    cat('\t|\n')
 
-    fprintf('\nEfficacy (Formula)\n')
-
-    for (thisL in 1:nLags){
-        fprintf('\t| Lag %d', thisL)
-    }
-    fprintf('\t|\n')
-
-    fprintf('P')
-    for (thisL in 1:nLags){
-        fprintf('\t| %.3f', pVals_E(thisL))
-    }
-    fprintf('\t|\n')
-
-    fprintf('H')
-    for (thisL in 1:nLags){
-        fprintf('\t| %d', pVals_E(thisL) < alphaVal)
-    }
-    fprintf('\t|\n')
-
-    fprintf('\nLatency (Formula)\n')
+    cat('\nEfficacy (Formula)\n')
 
     for (thisL in 1:nLags){
-        fprintf('\t| Lag %d', thisL)
+        cat('\t| Lag %d', thisL)
     }
-    fprintf('\t|\n')
+    cat('\t|\n')
 
-    fprintf('P')
+    cat('P')
     for (thisL in 1:nLags){
-        fprintf('\t| %.3f', pVals_L(thisL))
+        cat('\t| %.3f', pVals_E[thisL])
     }
-    fprintf('\t|\n')
+    cat('\t|\n')
 
-    fprintf('H')
+    cat('H')
     for (thisL in 1:nLags){
-        fprintf('\t| %d', pVals_L(thisL) < alphaVal)
+        cat('\t| %d', pVals_E[thisL] < alphaVal)
     }
-    fprintf('\t|\n')
+    cat('\t|\n')
 
-    fprintf('\nPrecision (Formula)\n')
+    cat('\nLatency (Formula)\n')
 
     for (thisL in 1:nLags){
-        fprintf('\t| Lag %d', thisL)
+        cat('\t| Lag %d', thisL)
     }
-    fprintf('\t|\n')
+    cat('\t|\n')
 
-    fprintf('P')
+    cat('P')
     for (thisL in 1:nLags){
-        fprintf('\t| %.3f', pVals_P(thisL))
+        cat('\t| %.3f', pVals_L[thisL])
     }
-    fprintf('\t|\n')
+    cat('\t|\n')
 
-    fprintf('H')
+    cat('H')
     for (thisL in 1:nLags){
-        fprintf('\t| %d', pVals_P(thisL) < alphaVal)
+        cat('\t| %d', pVals_L[thisL] < alphaVal)
+    }
+    cat('\t|\n')
+
+    cat('\nPrecision (Formula)\n')
+
+    for (thisL in 1:nLags){
+        cat('\t| Lag %d', thisL)
+    }
+    cat('\t|\n')
+
+    cat('P')
+    for (thisL in 1:nLags){
+        cat('\t| %.3f', pVals_P[thisL])
+    }
+    cat('\t|\n')
+
+    cat('H')
+    for (thisL in 1:nLags){
+        cat('\t| %d', pVals_P[thisL] < alphaVal)
     }
 
-    fprintf('\t|\n\n\n')
+    cat('\t|\n\n\n')
 
     # ---------------------------------------------------------------------
     # This section contains code for creating the figure of T1 parameter
@@ -879,7 +879,7 @@ for (thisSample in 1:nSamples){
 
         # Draw errorbars
         for (thisLag in 1:nLags){
-           line(c(lagList[thisLag], lagList[thisLag]),T1EfficacySEM[thisLag]*c(-1, 1)+T1EfficacyM(thisLag), 'Color', plotColor{2})
+           line(c(lagList[thisLag], lagList[thisLag]),T1EfficacySEM[thisLag]*c(-1, 1)+T1EfficacyM[thisLag], 'Color', plotColor{2})
         }
 
         # Plot parameter estimates
@@ -1001,7 +1001,7 @@ for (thisSample in 1:nSamples){
         plot(lagList,T2PrecisionM,plotIcon{2})
 
         # Set axis properties
-        axis([-100 1100 -20 220])
+        axis(c(-100, 1100, -20, 220))
         set(gca,'TickDir','out','XMinorTick','on','YMinorTick','on','YDir','Reverse')
         box on
         axis square
@@ -1016,10 +1016,10 @@ for (thisSample in 1:nSamples){
         }
 
         # Plot parameter estimates
-        plot(lagList,T2GivenT1PerformanceM,plotIcon{3})){
+        plot(lagList,T2GivenT1PerformanceM,plotIcon{3}))
 
         # Set axis properties
-        axis([-100 1100 -0.1 1.1])
+        axis(c(-100, 1100, -0.1, 1.1))
         set(gca,'TickDir','out','XMinorTick','on','YMinorTick','on')
         box on
         axis square
@@ -1039,10 +1039,10 @@ for (thisSample in 1:nSamples){
 
       # Do a quick check to make sure that values aren't all NaNs,
       # otherwise we'll get an error here.
-      if (sum(!isnan(T2_efficacy(thisParticipant,:))) > 1){
-          standardEfficacy(theseParticipants(thisParticipant),:,2,1) <- interp1(lagList,T2_efficacy(thisParticipant,:),standardLags,interpType)
-          standardLatency(theseParticipants(thisParticipant),:,2,1) <- interp1(lagList,T2_latency(thisParticipant,:),standardLags,interpType)
-          standardPrecision(theseParticipants(thisParticipant),:,2,1) <- interp1(lagList,T2_precision(thisParticipant,:),standardLags,interpType)
+      if (sum(!is.nan(T2_efficacy[thisParticipant,])) > 1){
+          standardEfficacy(theseParticipants[thisParticipant],,2,1) <- interp1(lagList,T2_efficacy[thisParticipant,],standardLags,interpType)
+          standardLatency(theseParticipants[thisParticipant],,2,1) <- interp1(lagList,T2_latency[thisParticipant,],standardLags,interpType)
+          standardPrecision(theseParticipants[thisParticipant],,2,1) <- interp1(lagList,T2_precision[thisParticipant,],standardLags,interpType)
       }
 
       # Replace T2 parameters prior to the transition point (as these are
@@ -1051,20 +1051,20 @@ for (thisSample in 1:nSamples){
       # and the next lag. Because lags don't necessarily align with the
       # time points chosen, we restore this to be the first lag at which M2
       # is best. Then we set anything below this point to NaN.
-      thisTransitionLag <- transitionPointRaw(thisParticipant)
+      thisTransitionLag <- transitionPointRaw[thisParticipant]
       thisTransitionPoint <- lagFactor*thisTransitionLag
       nPoints <- sum(standardLags<thisTransitionPoint)
-      standardEfficacy(theseParticipants(thisParticipant),1:nPoints,2,1) <- NaN(1,nPoints)
-      standardLatency(theseParticipants(thisParticipant),1:nPoints,2,1) <- NaN(1,nPoints)
-      standardPrecision(theseParticipants(thisParticipant),1:nPoints,2,1) <- NaN(1,nPoints)
+      standardEfficacy[theseParticipants[thisParticipant],1:nPoints,2,1] <- matrix(NA, 1,nPoints)
+      standardLatency[theseParticipants(thisParticipant),1:nPoints,2,1] <- matrix(NA, 1,nPoints)
+      standardPrecision[theseParticipants(thisParticipant),1:nPoints,2,1] <- matrix(NA, 1,nPoints)
 
-      standardEfficacy(theseParticipants(thisParticipant),:,1,2) <- interp1(lagList,T1Efficacy(thisParticipant,:),standardLags,interpType)
-      standardLatency(theseParticipants(thisParticipant),:,1,2) <- interp1(lagList,T1Latency(thisParticipant,:),standardLags,interpType)
-      standardPrecision(theseParticipants(thisParticipant),:,1,2) <- interp1(lagList,T1Precision(thisParticipant,:),standardLags,interpType)
+      standardEfficacy[theseParticipants[thisParticipant],,1,2] <- interp1(lagList,T1Efficacy[thisParticipant,],standardLags,interpType)
+      standardLatency[theseParticipants[thisParticipant],,1,2] <- interp1(lagList,T1Latency[thisParticipant,],standardLags,interpType)
+      standardPrecision[theseParticipants[thisParticipant],,1,2] <- interp1(lagList,T1Precision[thisParticipant,],standardLags,interpType)
 
-      standardEfficacy(theseParticipants(thisParticipant),:,2,2) <- interp1(lagList,T2Efficacy(thisParticipant,:),standardLags,interpType)
-      standardLatency(theseParticipants(thisParticipant),:,2,2) <- interp1(lagList,T2Latency(thisParticipant,:),standardLags,interpType)
-      standardPrecision(theseParticipants(thisParticipant),:,2,2) <- interp1(lagList,T2Precision(thisParticipant,:),standardLags,interpType)
+      standardEfficacy[theseParticipants[thisParticipant],,2,2] <- interp1(lagList,T2Efficacy[thisParticipant,],standardLags,interpType)
+      standardLatency[theseParticipants[thisParticipant],,2,2] <- interp1(lagList,T2Latency[thisParticipant,],standardLags,interpType)
+      standardPrecision[theseParticipants[thisParticipant],,2,2] <- interp1(lagList,T2Precision[thisParticipant,],standardLags,interpType)
 
     }
 
@@ -1087,58 +1087,58 @@ warning('on', 'MATLAB:interp1:NaNstrip')
 # First, for T2:
 
     # Calculate mean parameters across participants.
-    T2_accuracy_M <- nanmean(squeeze(standardAccuracy(:,:,2)))
-    T2_efficacy_M <- nanmean(squeeze(standardEfficacy(:,:,2,1)))
-    T2_latency_M <- nanmean(squeeze(standardLatency(:,:,2,1)))
-    T2_precision_M <- nanmean(squeeze(standardPrecision(:,:,2,1)))
+    T2_accuracy_M <- mean(squeeze(standardAccuracy[,,2]))
+    T2_efficacy_M <- mean(squeeze(standardEfficacy[,,2,1]))
+    T2_latency_M <- mean(squeeze(standardLatency[,,2,1]))
+    T2_precision_M <- mean(squeeze(standardPrecision[,,2,1]))
 
     # Calculate standard deviations across participants.
-    T2_accuracy_SD <- nanstd(squeeze(standardAccuracy(:,:,2)))
-    T2_efficacy_SD <- nanstd(squeeze(standardEfficacy(:,:,2,1)))
-    T2_latency_SD <- nanstd(squeeze(standardLatency(:,:,2,1)))
-    T2_precision_SD <- nanstd(squeeze(standardPrecision(:,:,2,1)))
+    T2_accuracy_SD <- sd(squeeze(standardAccuracy[,,2]))
+    T2_efficacy_SD <- sd(squeeze(standardEfficacy[,,2,1]))
+    T2_latency_SD <- sd(squeeze(standardLatency[,,2,1]))
+    T2_precision_SD <- sd(squeeze(standardPrecision[,,2,1]))
 
     # Tally the number of participants contributing to these means.
-    T2_nEstimates <- sum(!isnan(squeeze(standardEfficacy(:,:,2,1))))
+    T2_nEstimates <- sum(!is.nan(squeeze(standardEfficacy[,,2,1])))
 
     # Calculate the standard error of the mean.
-    T2_accuracy_SEM <- T2_accuracy_SD./sqrt(nParticipantsTotal)
-    T2_efficacy_SEM <- T2_efficacy_SD./sqrt(T2_nEstimates)
-    T2_latency_SEM <- T2_latency_SD./sqrt(T2_nEstimates)
-    T2_precision_SEM <- T2_precision_SD./sqrt(T2_nEstimates)
+    T2_accuracy_SEM <- T2_accuracy_SD/sqrt(nParticipantsTotal)
+    T2_efficacy_SEM <- T2_efficacy_SD/sqrt(T2_nEstimates)
+    T2_latency_SEM <- T2_latency_SD/sqrt(T2_nEstimates)
+    T2_precision_SEM <- T2_precision_SD/sqrt(T2_nEstimates)
 
 # Then, for T1:
 
     # Calculate mean parameters across participants.
-    T1_accuracy_M <- nanmean(squeeze(standardAccuracy(:,:,1)))
-    T1_efficacy_M <- nanmean(squeeze(standardEfficacy(:,:,1,1)))
-    T1_latency_M <- nanmean(squeeze(standardLatency(:,:,1,1)))
-    T1_precision_M <- nanmean(squeeze(standardPrecision(:,:,1,1)))
+    T1_accuracy_M <- mean(squeeze(standardAccuracy[,,1]))
+    T1_efficacy_M <- mean(squeeze(standardEfficacy[,,1,1]))
+    T1_latency_M <- mean(squeeze(standardLatency[,,1,1]))
+    T1_precision_M <- mean(squeeze(standardPrecision[,,1,1]))
 
     # Calculate standard deviations across participants.
-    T1_accuracy_SD <- nanstd(squeeze(standardAccuracy(:,:,1)))
-    T1_efficacy_SD <- nanstd(squeeze(standardEfficacy(:,:,1,1)))
-    T1_latency_SD <- nanstd(squeeze(standardLatency(:,:,1,1)))
-    T1_precision_SD <- nanstd(squeeze(standardPrecision(:,:,1,1)))
+    T1_accuracy_SD <- sd(squeeze(standardAccuracy[,,1]))
+    T1_efficacy_SD <- sd(squeeze(standardEfficacy[,,1,1]))
+    T1_latency_SD <- sd(squeeze(standardLatency[,,1,1]))
+    T1_precision_SD <- sd(squeeze(standardPrecision[,,1,1]))
 
     # Tally the number of participants contributing to these means.
     T1_nEstimates <- sum(!isnan(squeeze(standardEfficacy(:,:,1,1))))
 
     # Calculate the standard error of the mean.
-    T1_accuracy_SEM <- T1_accuracy_SD./sqrt(nParticipantsTotal)
-    T1_efficacy_SEM <- T1_efficacy_SD./sqrt(T1_nEstimates)
-    T1_latency_SEM <- T1_latency_SD./sqrt(T1_nEstimates)
-    T1_precision_SEM <- T1_precision_SD./sqrt(T1_nEstimates)
+    T1_accuracy_SEM <- T1_accuracy_SD/sqrt(nParticipantsTotal)
+    T1_efficacy_SEM <- T1_efficacy_SD/sqrt(T1_nEstimates)
+    T1_latency_SEM <- T1_latency_SD/sqrt(T1_nEstimates)
+    T1_precision_SEM <- T1_precision_SD/sqrt(T1_nEstimates)
 
 # Conduct t-tests as a rough guide to whether the parameter estimates
 # for T2 at each lag differ from a T1 baseline, which we consider to be
 # the T1 parameter at the longest lag.
 
 # Create empty matrices to store p-values
-nVals <- NaN(1,nStandardLags)
-pVals_E <- NaN(1,nStandardLags)
-pVals_L <- NaN(1,nStandardLags)
-pVals_P <- NaN(1,nStandardLags)
+nVals <- matrix(NA, 1,nStandardLags)
+pVals_E <- matrix(NA, 1,nStandardLags)
+pVals_L <- matrix(NA, 1,nStandardLags)
+pVals_P <- matrix(NA, 1,nStandardLags)
 
 # Cycle through each lag to conduct the t-tests
 for (thisLag in 1:nStandardLags){
@@ -1148,15 +1148,15 @@ for (thisLag in 1:nStandardLags){
     if (sum( !isnan(squeeze(standardEfficacy(:,thisLag,2,1))) & !isnan(standardEfficacy(:,nStandardLags,1,1)) ) > 1){
 
         # Efficacy t-test
-        [h,p] <- ttest(squeeze(standardEfficacy(:,thisLag,2,1)),standardEfficacy(:,nStandardLags,1,1))
+        [h,p] <- t.test(squeeze(standardEfficacy(:,thisLag,2,1)),standardEfficacy(:,nStandardLags,1,1))
         pVals_E(thisLag) <- p
 
         # Latency t-test
-        [h,p] <- ttest(squeeze(standardLatency(:,thisLag,2,1)),standardLatency(:,nStandardLags,1,1))
+        [h,p] <- t.test(squeeze(standardLatency(:,thisLag,2,1)),standardLatency(:,nStandardLags,1,1))
         pVals_L(thisLag) <- p
 
         # Precision t-test
-        [h,p] <- ttest(squeeze(standardPrecision(:,thisLag,2,1)),standardPrecision(:,nStandardLags,1,1))
+        [h,p] <- t.test(squeeze(standardPrecision(:,thisLag,2,1)),standardPrecision(:,nStandardLags,1,1))
         pVals_P(thisLag) <- p
 
         # Numberof participants
@@ -1262,20 +1262,20 @@ hold on
 
     # Draw the errorbars, with darkness indicating the proportion of
     # participants contributing to the estimate.
-    lagColors <- 1-repmat((T1_nEstimates/nParticipantsTotal)',1,3)
-    lagColors(:,thisRGB) <- ones(size(lagColors(:,thisRGB)))
+    lagColors <- 1-repmat(t(T1_nEstimates/nParticipantsTotal),1,3)
+    lagColors[,thisRGB] <- rep(1, length(lagColors[,thisRGB])
 
     for (thisLag in 1:nStandardLags){
-        line([standardLags(thisLag) standardLags(thisLag)],T1_efficacy_SEM(thisLag)*[-1 1]+T1_efficacy_M(thisLag), 'Color', lagColors(thisLag,:))
+        line(c(standardLags[thisLag], standardLags[thisLag]),T1_efficacy_SEM[thisLag]*c(-1, 1)+T1_efficacy_M[thisLag], 'Color', lagColors[thisLag,])
     }
 
     # Draw the lines joining icons for each lag.
     for (thisLag in 1:nStandardLags-1){
-        line([standardLags(thisLag) standardLags(thisLag+1)],[T1_efficacy_M(thisLag) T1_efficacy_M(thisLag+1)], 'Color', lagColors(thisLag,:))
+        line(c(standardLags[thisLag], standardLags[thisLag+1]),c(T1_efficacy_M[thisLag], T1_efficacy_M[thisLag+1]), 'Color', lagColors[thisLag,:])
     }
 
     # Draw the icons for each lag.
-    scatter(standardLags,T1_efficacy_M,[],lagColors)
+    scatter(standardLags,T1_efficacy_M,c(),lagColors)
 
 # Plot latency
 subplot(1,4,3)
@@ -1283,16 +1283,16 @@ hold on
 
     # Draw the errorbars for each lag.
     for (thisLag in 1:nStandardLags){
-        line([standardLags(thisLag) standardLags(thisLag)],T1_latency_SEM(thisLag)*[-1 1]+T1_latency_M(thisLag), 'Color', lagColors(thisLag,:))
+        line(c(standardLags(thisLag), standardLags[thisLag]),T1_latency_SEM[thisLag]*c(-1,1)+T1_latency_M[thisLag], 'Color', lagColors[thisLag,])
     }
 
     # Draw the lines joining icons for each lag.
     for (thisLag in 1:nStandardLags-1){
-        line([standardLags(thisLag) standardLags(thisLag+1)],[T1_latency_M(thisLag) T1_latency_M(thisLag+1)], 'Color', lagColors(thisLag,:))
+        line(c(standardLags[thisLag], standardLags[thisLag+1]),c(T1_latency_M[thisLag], T1_latency_M[thisLag+1]), 'Color', lagColors[thisLag,])
     }
 
     # Draw the icons for each lag.
-    scatter(standardLags,T1_latency_M,[],lagColors)
+    scatter(standardLags,T1_latency_M,c(),lagColors)
 
 # Plot precision
 subplot(1,4,4)
@@ -1300,16 +1300,16 @@ hold on
 
     # Draw the errorbars for each lag.
     for (thisLag in 1:nStandardLags){
-        line([standardLags(thisLag) standardLags(thisLag)],T1_precision_SEM(thisLag)*[-1 1]+T1_precision_M(thisLag), 'Color', lagColors(thisLag,:))
+        line(c(standardLags(thisLag), standardLags(thisLag)), T1_precision_SEM(thisLag)*c(-1, 1)+T1_precision_M[thisLag], 'Color', lagColors[thisLag,])
     }
 
     # Draw the lines joining icons for each lag.
     for (thisLag in 1:nStandardLags-1){
-            line([standardLags(thisLag) standardLags(thisLag+1)],[T1_precision_M(thisLag) T1_precision_M(thisLag+1)], 'Color', lagColors(thisLag,:))
+            line(c(standardLags[thisLag], standardLags[thisLag+1]),c(T1_precision_M[thisLag], T1_precision_M[thisLag+1]), 'Color', lagColors(thisLag,:))
     }
 
     # Draw the icons for each lag.
-    scatter(standardLags,T1_precision_M,[],lagColors)
+    scatter(standardLags,T1_precision_M,c(),lagColors)
 
 # ---------------------------------------------------------------------
 # This section contains code for creating the figure of T2 parameter
@@ -1323,27 +1323,27 @@ colormap gray
 hold on
 
     # Plot T1 bounds
-    T1_lastLag_E <- standardEfficacy(:,nStandardLags,1,1)
-    T1_Mean_E <- nanmean(T1_lastLag_E)
-    T1_SD_E <- nanstd(T1_lastLag_E)
-    T1_n_E <- sum(!isnan(T1_lastLag_E))
-    T1_SEM_E <- T1_SD_E./sqrt(T1_n_E)
+    T1_lastLag_E <- standardEfficacy[,nStandardLags,1,1]
+    T1_Mean_E <- mean(T1_lastLag_E)
+    T1_SD_E <- sd(T1_lastLag_E)
+    T1_n_E <- sum(!is.nan(T1_lastLag_E))
+    T1_SEM_E <- T1_SD_E/sqrt(T1_n_E)
 
-    line([0 standardLags(nStandardLags)],T1_Mean_E+T1_SEM_E*1.96*ones(1,2), 'Color', plotColor{1}, 'LineStyle', ':')
-    line([0 standardLags(nStandardLags)],T1_Mean_E-T1_SEM_E*1.96*ones(1,2), 'Color', plotColor{1}, 'LineStyle', ':')
+    lines(c(0, standardLags[nStandardLags]),T1_Mean_E+T1_SEM_E*1.96*ones(1,2), 'Color', plotColor[1], 'LineStyle', ':')
+    lines(c(0, standardLags[nStandardLags]),T1_Mean_E-T1_SEM_E*1.96*ones(1,2), 'Color', plotColor[1], 'LineStyle', ':')
 
     # Draw the errorbars, with darkness indicating the proportion of
     # participants contributing to the estimate.
-    lagColors <- 1-repmat((T2_nEstimates/nParticipantsTotal)',1,3)
-    lagColors(:,thisRGB) <- ones(size(lagColors(:,thisRGB)))
+    lagColors <- 1-repmat(t(T2_nEstimates/nParticipantsTotal),1,3)
+    lagColors[,thisRGB] <- rep(1, size(lagColors[,thisRGB]))
 
     for (thisLag in 1:nStandardLags){
-        line([standardLags(thisLag) standardLags(thisLag)],T2_efficacy_SEM(thisLag)*[-1.96 1.96]+T2_efficacy_M(thisLag), 'Color', lagColors(thisLag,:))
+        line(c(standardLags(thisLag), standardLags(thisLag)),T2_efficacy_SEM(thisLag)*c(-1.96, 1.96)+T2_efficacy_M[thisLag], 'Color', lagColors[thisLag,])
     }
 
     # Draw the lines joining icons for each lag.
     for (thisLag in 1:nStandardLags-1){
-        line([standardLags(thisLag) standardLags(thisLag+1)],[T2_efficacy_M(thisLag) T2_efficacy_M(thisLag+1)], 'Color', lagColors(thisLag,:))
+        line(c(standardLags[thisLag], standardLags[thisLag+1]),c(T2_efficacy_M[thisLag], T2_efficacy_M[thisLag+1]), 'Color', lagColors(thisLag,:))
     }
 
     # Draw the icons for each lag.
@@ -1354,23 +1354,23 @@ subplot(1,4,3)
 hold on
 
     # Plot T1 bounds
-    T1_lastLag_L <- standardLatency(:,nStandardLags,1,1)
-    T1_Mean_L <- nanmean(T1_lastLag_L)
-    T1_SD_L <- nanstd(T1_lastLag_L)
-    T1_n_L <- sum(!isnan(T1_lastLag_L))
-    T1_SEM_L <- T1_SD_L./sqrt(T1_n_L)
+    T1_lastLag_L <- standardLatency[:,nStandardLags,1,1]
+    T1_Mean_L <- mean(T1_lastLag_L)
+    T1_SD_L <- sd(T1_lastLag_L)
+    T1_n_L <- sum(!is.nan(T1_lastLag_L))
+    T1_SEM_L <- T1_SD_L/sqrt(T1_n_L)
 
-    line([0 standardLags(nStandardLags)],T1_Mean_L+T1_SEM_L*1.96*ones(1,2), 'Color', plotColor{1}, 'LineStyle', ':')
-    line([0 standardLags(nStandardLags)],T1_Mean_L-T1_SEM_L*1.96*ones(1,2), 'Color', plotColor{1}, 'LineStyle', ':')
+    line(c(0, standardLags[nStandardLags]),T1_Mean_L+T1_SEM_L*1.96*rep(1,2), 'Color', plotColor{1}, 'LineStyle', ':')
+    line(c(0, standardLags[nStandardLags]),T1_Mean_L-T1_SEM_L*1.96*rep(1,2), 'Color', plotColor{1}, 'LineStyle', ':')
 
     # Draw the errorbars for each lag.
     for (thisLag in 1:nStandardLags){
-        line([standardLags(thisLag) standardLags(thisLag)],T2_latency_SEM(thisLag)*[-1.96 1.96]+T2_latency_M(thisLag), 'Color', lagColors(thisLag,:))
+        line(c(standardLags[thisLag], standardLags[thisLag]),T2_latency_SEM[thisLag]*c(-1.96,1.96)+T2_latency_M[thisLag], 'Color', lagColors[thisLag,])
     }
 
     # Draw the lines joining icons for each lag.
     for (thisLag in 1:nStandardLags-1){
-        line([standardLags(thisLag) standardLags(thisLag+1)],[T2_latency_M(thisLag) T2_latency_M(thisLag+1)], 'Color', lagColors(thisLag,:))
+        line(c(standardLags[thisLag], standardLags[thisLag+1]),c(T2_latency_M[thisLag], T2_latency_M[thisLag+1]), 'Color', lagColors[thisLag,])
     }
 
     # Draw the icons for each lag.
@@ -1381,27 +1381,27 @@ subplot(1,4,4)
 hold on
 
     # Plot T1 bounds
-    T1_lastLag_P <- standardPrecision(:,nStandardLags,1,1)
-    T1_Mean_P <- nanmean(T1_lastLag_P)
-    T1_SD_P <- nanstd(T1_lastLag_P)
-    T1_n_P <- sum(!isnan(T1_lastLag_P))
-    T1_SEM_P <- T1_SD_P./sqrt(T1_n_P)
+    T1_lastLag_P <- standardPrecision[,nStandardLags,1,1]
+    T1_Mean_P <- mean(T1_lastLag_P)
+    T1_SD_P <- sd(T1_lastLag_P)
+    T1_n_P <- sum(!is.nan(T1_lastLag_P))
+    T1_SEM_P <- T1_SD_P/sqrt(T1_n_P)
 
-    line([0 standardLags(nStandardLags)],T1_Mean_P+T1_SEM_P*1.96*ones(1,2), 'Color', plotColor{1}, 'LineStyle', ':')
-    line([0 standardLags(nStandardLags)],T1_Mean_P-T1_SEM_P*1.96*ones(1,2), 'Color', plotColor{1}, 'LineStyle', ':')
+    line(c(0, standardLags(nStandardLags)),T1_Mean_P+T1_SEM_P*1.96*rep(1,2), 'Color', plotColor{1}, 'LineStyle', ':')
+    line(c(0, standardLags(nStandardLags)),T1_Mean_P-T1_SEM_P*1.96*rep(1,2), 'Color', plotColor{1}, 'LineStyle', ':')
 
     # Draw the errorbars for each lag.
     for (thisLag in 1:nStandardLags){
-        line([standardLags(thisLag) standardLags(thisLag)],T2_precision_SEM(thisLag)*[-1.96 1.96]+T2_precision_M(thisLag), 'Color', lagColors(thisLag,:))
+        line(c(standardLags[thisLag], standardLags[thisLag]),T2_precision_SEM[thisLag]*c(-1.96, 1.96)+T2_precision_M[thisLag], 'Color', lagColors[thisLag,])
     }
 
     # Draw the lines joining icons for each lag.
     for (thisLag in 1:nStandardLags-1){
-            line([standardLags(thisLag) standardLags(thisLag+1)],[T2_precision_M(thisLag) T2_precision_M(thisLag+1)], 'Color', lagColors(thisLag,:))
+            line(c(standardLags[thisLag], standardLags[thisLag+1]),c(T2_precision_M[thisLag], T2_precision_M[thisLag+1]), 'Color', lagColors(thisLag,:))
     }
 
     # Draw the icons for each lag.
-    scatter(standardLags,T2_precision_M,[],lagColors)
+    scatter(standardLags,T2_precision_M,c(),lagColors)
 
 
 # Now add the data points for the Vul et al. analysis.
@@ -1409,42 +1409,42 @@ hold on
 # First, for T2:
 
     # Calculate mean parameters across participants.
-    T2_efficacy_M <- nanmean(squeeze(standardEfficacy(:,:,2,2)))
-    T2_latency_M <- nanmean(squeeze(standardLatency(:,:,2,2)))
-    T2_precision_M <- nanmean(squeeze(standardPrecision(:,:,2,2)))
+    T2_efficacy_M <- mean(squeeze(standardEfficacy[,,2,2]))
+    T2_latency_M <- mean(squeeze(standardLatency[,,2,2]))
+    T2_precision_M <- mean(squeeze(standardPrecision[,,2,2]))
 
     # Calculate standard deviations across participants.
-    T2_efficacy_SD <- nanstd(squeeze(standardEfficacy(:,:,2,2)))
-    T2_latency_SD <- nanstd(squeeze(standardLatency(:,:,2,2)))
-    T2_precision_SD <- nanstd(squeeze(standardPrecision(:,:,2,2)))
+    T2_efficacy_SD <- sd(squeeze(standardEfficacy[,,2,2]))
+    T2_latency_SD <- sd(squeeze(standardLatency[,,2,2]))
+    T2_precision_SD <- sd(squeeze(standardPrecision[,,2,2]))
 
     # Tally the number of participants contributing to these means.
-    T2_nEstimates <- sum(!isnan(squeeze(standardEfficacy(:,:,2,2))))
+    T2_nEstimates <- sum(!is.nan(squeeze(standardEfficacy[,,2,2])))
 
     # Calculate the standard error of the mean.
-    T2_efficacy_SEM <- T2_efficacy_SD./sqrt(T2_nEstimates)
-    T2_latency_SEM <- T2_latency_SD./sqrt(T2_nEstimates)
-    T2_precision_SEM <- T2_precision_SD./sqrt(T2_nEstimates)
+    T2_efficacy_SEM <- T2_efficacy_SD/sqrt(T2_nEstimates)
+    T2_latency_SEM <- T2_latency_SD/sqrt(T2_nEstimates)
+    T2_precision_SEM <- T2_precision_SD/sqrt(T2_nEstimates)
 
 # Then, for T1:
 
     # Calculate mean parameters across participants.
-    T1_efficacy_M <- nanmean(squeeze(standardEfficacy(:,:,1,2)))
-    T1_latency_M <- nanmean(squeeze(standardLatency(:,:,1,2)))
-    T1_precision_M <- nanmean(squeeze(standardPrecision(:,:,1,2)))
+    T1_efficacy_M <- mean(squeeze(standardEfficacy[,,1,2]))
+    T1_latency_M <- mean(squeeze(standardLatency[,,1,2]))
+    T1_precision_M <- mean(squeeze(standardPrecision[,,1,2]))
 
     # Calculate standard deviations across participants.
-    T1_efficacy_SD <- nanstd(squeeze(standardEfficacy(:,:,1,2)))
-    T1_latency_SD <- nanstd(squeeze(standardLatency(:,:,1,2)))
-    T1_precision_SD <- nanstd(squeeze(standardPrecision(:,:,1,2)))
+    T1_efficacy_SD <- sd(squeeze(standardEfficacy[,,1,2]))
+    T1_latency_SD <- sd(squeeze(standardLatency[,,1,2]))
+    T1_precision_SD <- sd(squeeze(standardPrecision[,,1,2]))
 
     # Tally the number of participants contributing to these means.
-    T1_nEstimates <- sum(!isnan(squeeze(standardEfficacy(:,:,1,2))))
+    T1_nEstimates <- sum(!is.nan(squeeze(standardEfficacy[,,1,2])))
 
     # Calculate the standard error of the mean.
-    T1_efficacy_SEM <- T1_efficacy_SD./sqrt(T1_nEstimates)
-    T1_latency_SEM <- T1_latency_SD./sqrt(T1_nEstimates)
-    T1_precision_SEM <- T1_precision_SD./sqrt(T1_nEstimates)
+    T1_efficacy_SEM <- T1_efficacy_SD/sqrt(T1_nEstimates)
+    T1_latency_SEM <- T1_latency_SD/sqrt(T1_nEstimates)
+    T1_precision_SEM <- T1_precision_SD/sqrt(T1_nEstimates)
 
 
     # Conduct t-tests as a rough guide to whether the parameter estimates
