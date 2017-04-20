@@ -1451,28 +1451,28 @@ hold on
     # for T2 at each lag differ from a T1 baseline.
 
     # Create empty matrices to store p-values
-    pVals <- NaN(1,nStandardLags)
-    pVals_E <- NaN(1,nStandardLags)
-    pVals_L <- NaN(1,nStandardLags)
-    pVals_P <- NaN(1,nStandardLags)
+    pVals <- matrix(NA,1,nStandardLags)
+    pVals_E <- matrix(NA,1,nStandardLags)
+    pVals_L <- matrix(NA,1,nStandardLags)
+    pVals_P <- matrix(NA,1,nStandardLags)
 
     # Cycle through each lag to conduct the t-tests
     for (thisLag in 1:nStandardLags){
 
             # T2 contingent accuracy t-test
-            [h,p] <- ttest(squeeze(standardAccuracy(:,thisLag,2)),standardAccuracy(:,nStandardLags,1))
+            [h,p] <- t.test(squeeze(standardAccuracy(:,thisLag,2)),standardAccuracy(:,nStandardLags,1))
             pVals(thisLag) <- p
 
             # Efficacy t-test
-            [h,p] <- ttest(squeeze(standardEfficacy(:,thisLag,2,2)),standardEfficacy(:,nStandardLags,1,2))
+            [h,p] <- t.test(squeeze(standardEfficacy(:,thisLag,2,2)),standardEfficacy(:,nStandardLags,1,2))
             pVals_E(thisLag) <- p
 
             # Latency t-test
-            [h,p] <- ttest(squeeze(standardLatency(:,thisLag,2,2)),standardLatency(:,nStandardLags,1,2))
+            [h,p] <- t.test(squeeze(standardLatency(:,thisLag,2,2)),standardLatency(:,nStandardLags,1,2))
             pVals_L(thisLag) <- p
 
             # Precision t-test
-            [h,p] <- ttest(squeeze(standardPrecision(:,thisLag,2,2)),standardPrecision(:,nStandardLags,1,2))
+            [h,p] <- t.test(squeeze(standardPrecision(:,thisLag,2,2)),standardPrecision(:,nStandardLags,1,2))
             pVals_P(thisLag) <- p
 
     }
@@ -1482,82 +1482,82 @@ hold on
 # This section contains code for printing the outcome of these t-tests
 # to the command window.
 
-fprintf('\nContingent Accuracy\n')
+cat('\nContingent Accuracy\n')
 
 for (thisL in 1:nStandardLags){
-    fprintf('\t| L %d', thisL)
+    cat('\t| L %d', thisL)
 }
-fprintf('\t|\n')
+cat('\t|\n')
 
-fprintf('P')
+cat('P')
 for (thisL in 1:nStandardLags){
-    fprintf('\t| %.3f', pVals(thisL))
+    cat('\t| %.3f', pVals[thisL])
 }
-fprintf('\t|\n')
+cat('\t|\n')
 
-fprintf('H')
+cat('H')
 for (thisL in 1:nStandardLags){
-    fprintf('\t| %d ', pVals(thisL) < alphaVal)
+    cat('\t| %d ', pVals[thisL] < alphaVal)
 }
-fprintf('\t|\n')
+cat('\t|\n')
 
-fprintf('\nEfficacy (Formula)\n')
-
-for (thisL in 1:nStandardLags){
-    fprintf('\t| L %d', thisL)
-}
-fprintf('\t|\n')
-
-fprintf('P')
-for (thisL in 1:nStandardLags){
-    fprintf('\t| %.3f', pVals_E(thisL))
-}
-fprintf('\t|\n')
-
-fprintf('H')
-for (thisL in 1:nStandardLags){
-    fprintf('\t| %d', pVals_E(thisL) < alphaVal)
-}
-fprintf('\t|\n')
-
-fprintf('\nLatency (Formula)\n')
+cat('\nEfficacy (Formula)\n')
 
 for (thisL in 1:nStandardLags){
-    fprintf('\t| L %d', thisL)
+    cat('\t| L %d', thisL)
 }
-fprintf('\t|\n')
+cat('\t|\n')
 
-fprintf('P')
+cat('P')
 for (thisL in 1:nStandardLags){
-    fprintf('\t| %.3f', pVals_L(thisL))
+    cat('\t| %.3f', pVals_E[thisL])
 }
-fprintf('\t|\n')
+cat('\t|\n')
 
-fprintf('H')
+cat('H')
 for (thisL in 1:nStandardLags){
-    fprintf('\t| %d', pVals_L(thisL) < alphaVal)
+    cat('\t| %d', pVals_E[thisL] < alphaVal)
 }
-fprintf('\t|\n')
+cat('\t|\n')
 
-fprintf('\nPrecision (Formula)\n')
+cat('\nLatency (Formula)\n')
 
 for (thisL in 1:nStandardLags){
-    fprintf('\t| L %d', thisL)
+    cat('\t| L %d', thisL)
 }
-fprintf('\t|\n')
+cat('\t|\n')
 
-fprintf('P')
+cat('P')
 for (thisL in 1:nStandardLags){
-    fprintf('\t| %.3f', pVals_P(thisL))
+    cat('\t| %.3f', pVals_L[thisL])
 }
-fprintf('\t|\n')
+cat('\t|\n')
 
-fprintf('H')
+cat('H')
 for (thisL in 1:nStandardLags){
-    fprintf('\t| %d', pVals_P(thisL) < alphaVal)
+    cat('\t| %d', pVals_L[thisL] < alphaVal)
+}
+cat('\t|\n')
+
+cat('\nPrecision (Formula)\n')
+
+for (thisL in 1:nStandardLags){
+    cat('\t| L %d', thisL)
+}
+cat('\t|\n')
+
+cat('P')
+for (thisL in 1:nStandardLags){
+    cat('\t| %.3f', pVals_P[thisL])
+}
+cat('\t|\n')
+
+cat('H')
+for (thisL in 1:nStandardLags){
+    cat('\t| %d', pVals_P[thisL] < alphaVal)
 }
 
-fprintf('\t|\n\n\n')
+cat('\t|\n\n\n')
 
 # ---------------------------------------------------------------------
 # This section contains code for creating the figure of T1 parameter
@@ -1572,7 +1572,7 @@ hold on
 
     # Draw errorbars
     for (thisLag in 1:nStandardLags){
-       line([standardLags(thisLag) standardLags(thisLag)],T1_efficacy_SEM(thisLag)*[-1 1]+T1_efficacy_M(thisLag), 'Color', plotColor{2})
+       line(c(standardLags[thisLag], standardLags[thisLag]),T1_efficacy_SEM(thisLag)*c(-1, 1)+T1_efficacy_M[thisLag], 'Color', plotColor{2})
     }
 
     # Plot parameter estimates
@@ -1590,7 +1590,7 @@ hold on
 
     # Draw errorbars
     for (thisLag in 1:nStandardLags){
-        line([standardLags(thisLag) standardLags(thisLag)],T1_latency_SEM(thisLag)*[-1 1]+T1_latency_M(thisLag), 'Color', plotColor{2})
+        line(c(standardLags[thisLag], standardLags[thisLag]), T1_latency_SEM[thisLag]*c(-1, 1)+T1_latency_M[thisLag], 'Color', plotColor{2})
     }
 
     # Plot parameter estimates
@@ -1608,7 +1608,7 @@ hold on
 
     # Draw errorbars
     for (thisLag in 1:nStandardLags){
-        line([standardLags(thisLag) standardLags(thisLag)],T1_precision_SEM(thisLag)*[-1 1]+T1_precision_M(thisLag), 'Color', plotColor{2})
+        line(c(standardLags[thisLag], standardLags[thisLag]), T1_precision_SEM[thisLag]*c(-1, 1)+T1_precision_M[thisLag], 'Color', plotColor{2})
     }
 
     # Plot parameter estimates
@@ -1626,7 +1626,7 @@ hold on
 
     # Draw errorbars
     for (thisLag in 1:nStandardLags){
-        line([standardLags(thisLag) standardLags(thisLag)],T1_accuracy_SEM(thisLag)*[-1 1]+T1_accuracy_M(thisLag), 'Color', plotColor{3})
+        line(c(standardLags[thisLag], standardLags[thisLag]_, T1_accuracy_SEM[thisLag]*c(-1, 1)+T1_accuracy_M[thisLag], 'Color', plotColor{3})
     }
 
     # Plot parameter estimates
@@ -1650,18 +1650,18 @@ subplot(1,4,2)
 hold on
 
     # Plot T1 bounds
-    T1_lastLag_E <- standardEfficacy(:,nStandardLags,1,2)
-    T1_Mean_E <- nanmean(T1_lastLag_E)
-    T1_SD_E <- nanstd(T1_lastLag_E)
-    T1_n_E <- sum(!isnan(T1_lastLag_E))
-    T1_SEM_E <- T1_SD_E./sqrt(T1_n_E)
+    T1_lastLag_E <- standardEfficacy[,nStandardLags,1,2]
+    T1_Mean_E <- mean(T1_lastLag_E)
+    T1_SD_E <- sd(T1_lastLag_E)
+    T1_n_E <- sum(!is.nan(T1_lastLag_E))
+    T1_SEM_E <- T1_SD_E/sqrt(T1_n_E)
 
-    line([0 standardLags(nStandardLags)],T1_Mean_E+T1_SEM_E*1.96*ones(1,2), 'Color', plotColor{2}, 'LineStyle', ':')
-    line([0 standardLags(nStandardLags)],T1_Mean_E-T1_SEM_E*1.96*ones(1,2), 'Color', plotColor{2}, 'LineStyle', ':')
+    line(c(0, standardLags[nStandardLags]),T1_Mean_E+T1_SEM_E*1.96*rep(1,2), 'Color', plotColor{2}, 'LineStyle', ':')
+    line(c(0, standardLags[nStandardLags]),T1_Mean_E-T1_SEM_E*1.96*rep(1,2), 'Color', plotColor{2}, 'LineStyle', ':')
 
     # Draw errorbars
     for (thisLag in 1:nStandardLags){
-       line([standardLags(thisLag) standardLags(thisLag)],T2_efficacy_SEM(thisLag)*[-1.96 1.96]+T2_efficacy_M(thisLag), 'Color', plotColor{2})
+       line(c(standardLags[thisLag], standardLags[thisLag]), T2_efficacy_SEM[thisLag]*c(-1.96, 1.96)+T2_efficacy_M[thisLag], 'Color', plotColor{2})
     }
 
     # Plot parameter estimates
@@ -1678,18 +1678,18 @@ subplot(1,4,3)
 hold on
 
     # Plot T1 bounds
-    T1_lastLag_L <- standardLatency(:,nStandardLags,1,2)
-    T1_Mean_L <- nanmean(T1_lastLag_L)
-    T1_SD_L <- nanstd(T1_lastLag_L)
-    T1_n_L <- sum(!isnan(T1_lastLag_L))
-    T1_SEM_L <- T1_SD_L./sqrt(T1_n_L)
+    T1_lastLag_L <- standardLatency[,nStandardLags,1,2]
+    T1_Mean_L <- mean(T1_lastLag_L)
+    T1_SD_L <- sd(T1_lastLag_L)
+    T1_n_L <- sum(!is.nan(T1_lastLag_L))
+    T1_SEM_L <- T1_SD_L/sqrt(T1_n_L)
 
-    line([0 standardLags(nStandardLags)],T1_Mean_L+T1_SEM_L*1.96*ones(1,2), 'Color', plotColor{2}, 'LineStyle', ':')
-    line([0 standardLags(nStandardLags)],T1_Mean_L-T1_SEM_L*1.96*ones(1,2), 'Color', plotColor{2}, 'LineStyle', ':')
+    line(c(0, standardLags[nStandardLags]),T1_Mean_L+T1_SEM_L*1.96*rep(1,2), 'Color', plotColor{2}, 'LineStyle', ':')
+    line(c(0, standardLags[nStandardLags]),T1_Mean_L-T1_SEM_L*1.96*rep(1,2), 'Color', plotColor{2}, 'LineStyle', ':')
 
     # Draw errorbars
     for (thisLag in 1:nStandardLags){
-        line([standardLags(thisLag) standardLags(thisLag)],T2_latency_SEM(thisLag)*[-1.96 1.96]+T2_latency_M(thisLag), 'Color', plotColor{2})
+        line(c(standardLags[thisLag], standardLags[thisLag)],T2_latency_SEM[thisLag]*c(-1.96, 1.96)+T2_latency_M[thisLag], 'Color', plotColor{2})
     }
 
     # Plot parameter estimates
@@ -1706,18 +1706,18 @@ subplot(1,4,4)
 hold on
 
     # Plot T1 bounds
-    T1_lastLag_P <- standardPrecision(:,nStandardLags,1,2)
-    T1_Mean_P <- nanmean(T1_lastLag_P)
-    T1_SD_P <- nanstd(T1_lastLag_P)
-    T1_n_P <- sum(!isnan(T1_lastLag_P))
-    T1_SEM_P <- T1_SD_P./sqrt(T1_n_P)
+    T1_lastLag_P <- standardPrecision[,nStandardLags,1,2]
+    T1_Mean_P <- mean(T1_lastLag_P)
+    T1_SD_P <- sd(T1_lastLag_P)
+    T1_n_P <- sum(!is.nan(T1_lastLag_P))
+    T1_SEM_P <- T1_SD_P/sqrt(T1_n_P)
 
-    line([0 standardLags(nStandardLags)],T1_Mean_P+T1_SEM_P*1.96*ones(1,2), 'Color', plotColor{2}, 'LineStyle', ':')
-    line([0 standardLags(nStandardLags)],T1_Mean_P-T1_SEM_P*1.96*ones(1,2), 'Color', plotColor{2}, 'LineStyle', ':')
+    line(c(0, standardLags[nStandardLags]),T1_Mean_P+T1_SEM_P*1.96*rep(1,2), 'Color', plotColor{2}, 'LineStyle', ':')
+    line(c(0, standardLags[nStandardLags]),T1_Mean_P-T1_SEM_P*1.96*rep(1,2), 'Color', plotColor{2}, 'LineStyle', ':')
 
     # Draw errorbars
     for (thisLag in 1:nStandardLags){
-        line([standardLags(thisLag) standardLags(thisLag)],T2_precision_SEM(thisLag)*[-1.96 1.96]+T2_precision_M(thisLag), 'Color', plotColor{2})
+        line(c(standardLags[thisLag], standardLags[thisLag]),T2_precision_SEM[thisLag]*c(-1.96, 1.96)+T2_precision_M[thisLag], 'Color', plotColor{2})
     }
 
     # Plot parameter estimates
@@ -1734,18 +1734,18 @@ subplot(1,4,1)
 hold on
 
     # Plot T1 bounds
-    T1_lastLag_A <- standardAccuracy(:,nStandardLags,1)
-    T1_Mean_A <- nanmean(T1_lastLag_A)
-    T1_SD_A <- nanstd(T1_lastLag_A)
-    T1_n_A <- sum(!isnan(T1_lastLag_A))
-    T1_SEM_A <- T1_SD_A./sqrt(T1_n_A)
+    T1_lastLag_A <- standardAccuracy[,nStandardLags,1]
+    T1_Mean_A <- mean(T1_lastLag_A)
+    T1_SD_A <- sd(T1_lastLag_A)
+    T1_n_A <- sum(!is.nan(T1_lastLag_A))
+    T1_SEM_A <- T1_SD_A/sqrt(T1_n_A)
 
-    line([0 standardLags(nStandardLags)],T1_Mean_A+T1_SEM_A*1.96*ones(1,2), 'Color', plotColor{3}, 'LineStyle', ':')
-    line([0 standardLags(nStandardLags)],T1_Mean_A-T1_SEM_A*1.96*ones(1,2), 'Color', plotColor{3}, 'LineStyle', ':')
+    line(c(0, standardLags[nStandardLags]),T1_Mean_A+T1_SEM_A*1.96*rep(1,2), 'Color', plotColor{3}, 'LineStyle', ':')
+    line(c(0, standardLags[nStandardLags]),T1_Mean_A-T1_SEM_A*1.96*rep(1,2), 'Color', plotColor{3}, 'LineStyle', ':')
 
     # Draw errorbars
     for (thisLag in 1:nStandardLags){
-        line([standardLags(thisLag) standardLags(thisLag)],T2_accuracy_SEM(thisLag)*[-1.96 1.96]+T2_accuracy_M(thisLag), 'Color', plotColor{3})
+        line(c(standardLags[thisLag], standardLags[thisLag]), T2_accuracy_SEM[thisLag]*c(-1.96, 1.96)+T2_accuracy_M[thisLag], 'Color', plotColor{3})
     }
 
     # Plot parameter estimates
@@ -1758,5 +1758,5 @@ hold on
     axis square
 
 # Work out proportion of excluded models
-excludedModels <- (sum(dumpedOnEfficacyLimit)+sum(dumpedOnLatencyLimit)+sum(dumpedOnPrecisionLimit))/(2*sum(allNParticipants.*allNLags))
-fprintf('\n\n%.1f%% of models excluded.\n\n', 100*excludedModels)
+excludedModels <- (sum(dumpedOnEfficacyLimit)+sum(dumpedOnLatencyLimit)+sum(dumpedOnPrecisionLimit))/(2*sum(allNParticipants*allNLags))
+cat('\n\n%.1f%% of models excluded.\n\n', 100*excludedModels)
