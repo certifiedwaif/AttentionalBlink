@@ -26,13 +26,13 @@ thisPath <- '/Users/experimentalmode/Documents/MATLAB/ABFinal/'
 
 # Provide a name for each sample,
 # so files can be read and written with corresponding filenames.
-sampleNames <- {'Warwick','MIT','Western','Berkeley','SydneyObject','SydneyWord'}
+sampleNames <- c("Warwick","MIT","Western","Berkeley","SydneyObject","SydneyWord")
 
 # Provide some properties of the data for each sample, in order
-allNParticipants <- [20 11 12 12 32 31]# Number of participants
-allNLetters <- [26 26 26 14 20 20]# Number of items in a stream on each trial
-allNTrials <- [100 100 100 210 280 280]# Total number of trials per block across all lags
-allNBlocks <- [4 4 4 2 1 1]# Total number of blocks
+allNParticipants <- c(20, 11, 12, 12, 32, 31)# Number of participants
+allNLetters <- c(26, 26, 26, 14, 20, 20)# Number of items in a stream on each trial
+allNTrials <- c(100, 100, 100, 210, 280, 280)# Total number of trials per block across all lags
+allNBlocks <- c(4, 4, 4, 2, 1, 1)# Total number of blocks
 
 # Set some model-fitting parameters.
 nReplicates <- 100# Number of times to repeat each fit with different starting values
@@ -64,7 +64,7 @@ plotFits <- 0
 # Declare global variables that need to be accessed by the objective
 # function.
 global xDomain
-global pseudo_uniform){){
+global pseudo_uniform
 
 # Add folders to the MATLAB path.
 addpath(genpath(thisPath))
@@ -76,33 +76,33 @@ cd([thisPath 'Data'])
 warning('off', 'stats:mlecov:NonPosDefHessian')
 
 # Determine number of samples
-nSamples <- numel(sampleNames)
+nSamples <- length(sampleNames)
 
 # Cycle through each sample
 for (thisSample in 1:nSamples){
 
     # Load the compiled data file for this sample.
-    load(['CompiledData_' sampleNames{thisSample} '.mat'])
+    load(['CompiledData_' sampleNames[thisSample] '.mat'])
 
     # Extract the relevant task parameters specified above.
-    nLetters <- allNLetters(thisSample)
-    nTrials <- allNTrials(thisSample)
-    nBlocks <- allNBlocks(thisSample)
-    nParticipants <- allNParticipants(thisSample)
+    nLetters <- allNLetters[thisSample]
+    nTrials <- allNTrials[thisSample]
+    nBlocks <- allNBlocks[thisSample]
+    nParticipants <- allNParticipants[thisSample]
 
     # Work out the number of lags.
-    listLags <- unique(allLags(:))
-    listLags(isnan(listLags)) <- []
-    nLags <- numel(listLags)
+    listLags <- unique(allLags)
+    listLags[is.nan(listLags)] <- c()
+    nLags <- length(listLags)
 
     # Work out possible positions in the stream for T1.
-    listT1Pos <- unique(allT1Pos(:))
-    nT1Pos <- numel(listT1Pos)
+    listT1Pos <- unique(allT1Pos)
+    nT1Pos <- length(listT1Pos)
 
     # Get the list of T1 errors and extract some properties.
-    listT1Errors <- unique(allT1Error(:))# List of unique observed T1 errors
-    listT1Errors(isnan(listT1Errors)) <- []# Get rid of NaN values
-    nT1Errors <- numel(listT1Errors)# Number of unique observed T1 errors
+    listT1Errors <- unique(allT1Error)# List of unique observed T1 errors
+    listT1Errors[is.nan(listT1Errors)] <- []# Get rid of NaN values
+    nT1Errors <- length(listT1Errors)# Number of unique observed T1 errors
     minT1Error <- min(listT1Errors)# Lowest (most negative) T1 error
     maxT1Error <- max(listT1Errors)# Highest (most positive) T1 error
 
@@ -110,7 +110,7 @@ for (thisSample in 1:nSamples){
 
     # The following output to the command window is just to keep track of
     # what the program is doing.
-    fprintf('\n\n%s\n\n', upper(sampleNames{thisSample}))
+    cat('\n\n%s\n\n', upper(sampleNames[thisSample]))
 
     # Build empty matrices for storing parameter estimates for each
     # participant, at each lag. Also build matrices to store upper and
@@ -120,20 +120,20 @@ for (thisSample in 1:nSamples){
     # T2, even though that won't be used at any point in the analysis
     # proper. However, it can be worthwhile running it as a sanity check.
 
-    allT1Estimates_byParticipant <- NaN(nParticipants,nLags,nFreeParameters)
-    allT1LowerBounds_byParticipant <- NaN(nParticipants,nLags,nFreeParameters)
-    allT1UpperBounds_byParticipant <- NaN(nParticipants,nLags,nFreeParameters)
-    allT1MinNegLogLikelihoods_byParticipant <- NaN(nParticipants,nLags)
+    allT1Estimates_byParticipant <- array(data=NA, dim=c(nParticipants,nLags,nFreeParameters)
+    allT1LowerBounds_byParticipant <- array(data=NA, dim=c(nParticipants,nLags,nFreeParameters)
+    allT1UpperBounds_byParticipant <- array(data=NA, dim=c(nParticipants,nLags,nFreeParameters)
+    allT1MinNegLogLikelihoods_byParticipant <- array(data=NA, dim=c(nParticipants,nLags)
 
-    allT2Estimates_byParticipant <- NaN(nParticipants,nLags,nFreeParameters)
-    allT2LowerBounds_byParticipant <- NaN(nParticipants,nLags,nFreeParameters)
-    allT2UpperBounds_byParticipant <- NaN(nParticipants,nLags,nFreeParameters)
-    allT2MinNegLogLikelihoods_byParticipant <- NaN(nParticipants,nLags)
+    allT2Estimates_byParticipant <- array(data=NA, dim=c(nParticipants,nLags,nFreeParameters)
+    allT2LowerBounds_byParticipant <- array(data=NA, dim=c(nParticipants,nLags,nFreeParameters)
+    allT2UpperBounds_byParticipant <- array(data=NA, dim=c(nParticipants,nLags,nFreeParameters)
+    allT2MinNegLogLikelihoods_byParticipant <- array(data=NA, dim=c(nParticipants,nLags)
 
-    allT1T2Estimates_byParticipant <- NaN(nParticipants,nLags,nFreeParameters)
-    allT1T2LowerBounds_byParticipant <- NaN(nParticipants,nLags,nFreeParameters)
-    allT1T2UpperBounds_byParticipant <- NaN(nParticipants,nLags,nFreeParameters)
-    allT1T2MinNegLogLikelihoods_byParticipant <- NaN(nParticipants,nLags)
+    allT1T2Estimates_byParticipant <- array(data=NA, dim=c(nParticipants,nLags,nFreeParameters)
+    allT1T2LowerBounds_byParticipant <- array(data=NA, dim=c(nParticipants,nLags,nFreeParameters)
+    allT1T2UpperBounds_byParticipant <- array(data=NA, dim=c(nParticipants,nLags,nFreeParameters)
+    allT1T2MinNegLogLikelihoods_byParticipant <- array(data=NA, dim=c(nParticipants,nLags)
 
     # Set fit options.
     options <- statset('MaxIter', fitMaxIter, 'MaxFunEvals', fitMaxFunEvals, 'Display', 'off')
@@ -142,26 +142,26 @@ for (thisSample in 1:nSamples){
     for (thisParticipant in 1:nParticipants){
 
         # Keep track of progress in the command window.
-        fprintf('\nParticipant %d... ', thisParticipant)
+        print(sprintf('\nParticipant %d... ', thisParticipant))
 
         # Extract the relevant lists of T1 and T2 errors, T1 and T2 stream
         # positions, and corresponding lags.
-        T1Error <- squeeze(allT1Error(thisParticipant,:,:))
-        T2Error <- squeeze(allT2Error(thisParticipant,:,:))
-        T1Pos <- squeeze(allT1Pos(thisParticipant,:,:))
-        T2Pos <- squeeze(allT2Pos(thisParticipant,:,:))
-        Lags <- squeeze(allLags(thisParticipant,:,:))
+        T1Error <- squeeze(allT1Error[thisParticipant,,])
+        T2Error <- squeeze(allT2Error[thisParticipant,,])
+        T1Pos <- squeeze(allT1Pos[thisParticipant,,])
+        T2Pos <- squeeze(allT2Pos[thisParticipant,,])
+        Lags <- squeeze(allLags[thisParticipant,,])
 
         # Cycle through each lag.
         for (thisLag in 1:nLags){
 
             # Keep track of progress in the command window.
-            fprintf('L%d ', thisLag)
+            print(sprintf('L%d ', thisLag))
 
             # Find the lag value for this numbered lag. These are usually
             # the same, but this allows for the possibility that some lag
             # values aren't tested.
-            thisLagVal <- listLags(thisLag)
+            thisLagVal <- listLags[thisLag]
 
             # Go through and replace NaN values. Here, we assume that a NaN
             # value is a guess, and replace it with a random sample from
@@ -171,44 +171,44 @@ for (thisSample in 1:nSamples){
 
             # Identify T1 trials at this lag.
             hasThisLag <- Lags==thisLagVal
-            theseT1Error <- T1Error(hasThisLag)'
-            theseT1Pos <- T1Pos(hasThisLag)'
+            theseT1Error <- t(T1Error[hasThisLag])
+            theseT1Pos <- t(T1Pos[hasThisLag])
 
-            if (sum(isnan(theseT1Error)) > 0){# If there is at least one NaN
+            if (sum(is.nan(theseT1Error)) > 0){# If there is at least one NaN
 
                 # Find NaNs.
-                replaceCells <- find(isnan(theseT1Error))
+                replaceCells <- which(is.nan(theseT1Error))
 
                 # Find the T1 positions of the trials to be replaced.
-                replacePositions <- theseT1Pos(replaceCells)
+                replacePositions <- theseT1Pos[replaceCells]
 
                 # Cycle through each point to be replaced.
-                for (thisReplace in 1:numel(replaceCells)){
+                for (thisReplace in 1:length(replaceCells)){
 
                     # Replace with a random possible value.
-                    theseT1Error(replaceCells(thisReplace)) <- randi(nLetters)-replacePositions(thisReplace)
+                    theseT1Error[replaceCells[thisReplace]] <- randi(nLetters)-replacePositions[thisReplace]
 
                 }
 
             }
 
             # Identify T2 trials at this lag.
-            theseT2Error <- T2Error(hasThisLag)'
-            theseT2Pos <- T2Pos(hasThisLag)'
+            theseT2Error <- t(T2Error[hasThisLag])
+            theseT2Pos <- t(T2Pos[hasThisLag])
 
-            if (sum(isnan(theseT2Error)) > 0){# If there is at least one NaN
+            if (sum(is.nan(theseT2Error)) > 0){# If there is at least one NaN
 
                 # Find NaNs.
-                replaceCells <- find(isnan(theseT2Error))
+                replaceCells <- which(is.nan(theseT2Error))
 
                 # Find the T2 positions of the trials to be replaced.
-                replacePositions <- theseT2Pos(replaceCells)
+                replacePositions <- theseT2Pos[replaceCells]
 
                 # Cycle through each point to be replaced.
-                for (thisReplace in 1:numel(replaceCells)){
+                for (thisReplace in 1:length(replaceCells)){
 
                     # Replace with a random possible value.
-                    theseT2Error(replaceCells(thisReplace)) <- randi(nLetters)-replacePositions(thisReplace)
+                    theseT2Error[replaceCells[thisReplace]] <- randi(nLetters)-replacePositions[thisReplace]
 
                 }
 
@@ -216,7 +216,7 @@ for (thisSample in 1:nSamples){
 
             # Combine T1 and T2 distributions on a common scale (i.e. alter
             # T1 errors to reflect position relative to T2.
-            theseT1T2Error <- [theseT1Error-listLags(thisLag) theseT2Error]
+            theseT1T2Error <- c(theseT1Error-listLags[thisLag], theseT2Error)
 
             # Get minimum and maximum error values.
             minT2Error <- min(theseT2Error)
@@ -245,7 +245,7 @@ for (thisSample in 1:nSamples){
             sigma_ub_T2 <- sigmaBound
 
             # Unpack mean (latency) bounds for compined T1 & T2.
-            mu_lb_T1T2 <- -muBound-listLags(thisLag)
+            mu_lb_T1T2 <- -muBound-listLags[thisLag]
             mu_ub_T1T2 <- muBound
 
             # Unpack SD (precision) bounds for combined T1 & T2.
@@ -274,19 +274,19 @@ for (thisSample in 1:nSamples){
             # distribution because the most extreme errors are only
             # possible on trials in which targets appear at their most
             # extreme positions.
-            pseudo_uniform in zeros(size(xDomain))){){
+            pseudo_uniform <- rep(0, length(xDomain))
 
             # Cycle through each possible T1 position.
-            for (thisPosNo in 1:numel(theseT1Pos)){
+            for (thisPosNo in 1:length(theseT1Pos)){
 
                 # Identify the actual T1 position corresponding to the
                 # position number. For example, the first position number
                 # might be the 7th position in the stream.
-                thisPos <- theseT1Pos(thisPosNo)
+                thisPos <- theseT1Pos[thisPosNo]
 
                 # Add to the pseudo-uniform distribution one unit for every
                 # possible error given that T1 position.
-                pseudo_uniform((1-thisPos-minErr+1):(nLetters-thisPos-minErr+1)) in pseudo_uniform((1-thisPos-minErr+1):(nLetters-thisPos-minErr+1))+ones(1,nLetters)){){
+                pseudo_uniform[(1-thisPos-minErr+1):(nLetters-thisPos-minErr+1)] = pseudo_uniform[(1-thisPos-minErr+1):(nLetters-thisPos-minErr+1)]+rep(1,nLetters)
 
             }
 
@@ -302,14 +302,14 @@ for (thisSample in 1:nSamples){
                 sigmaGuess <- sigmaBound*rand+smallNonZeroNumber
 
                 # Compile to feed into the MLE function.
-                parameterGuess <- [pGuess muGuess sigmaGuess]
-                parameterLowerBound <- [smallNonZeroNumber mu_lb_T1 sigma_lb_T1]
-                parameterUpperBound <- [1 mu_ub_T1 sigma_ub_T1]
+                parameterGuess <- c(pGuess, muGuess, sigmaGuess)
+                parameterLowerBound <- c(smallNonZeroNumber, mu_lb_T1, sigma_lb_T1)
+                parameterUpperBound <- c(1, mu_ub_T1, sigma_ub_T1)
 
                 # Ensure guesses satisfy bounds, and round them marginally
                 # up or down if necessary.
-                parameterGuess <- max([parameterGuess;parameterLowerBound])
-                parameterGuess <- min([parameterGuess;parameterUpperBound])
+                parameterGuess <- max(c(parameterGuess;parameterLowerBound))
+                parameterGuess <- min(c(parameterGuess;parameterUpperBound))
 
                 # Run the MLE function.
                 [currentEstimates, currentCIs] <- mle(theseT1Error, 'pdf', pdf_normmixture_single, 'start', parameterGuess, 'lower', parameterLowerBound, 'upper', parameterUpperBound, 'options', options)
@@ -330,10 +330,10 @@ for (thisSample in 1:nSamples){
             }
 
             # Enter the best estimates into the parameter matrices.
-            allT1Estimates_byParticipant(thisParticipant,thisLag,:) <- bestEstimates
-            allT1LowerBounds_byParticipant(thisParticipant,thisLag,:) <- bestEstimateCIs(1,:)
-            allT1UpperBounds_byParticipant(thisParticipant,thisLag,:) <- bestEstimateCIs(2,:)
-            allT1MinNegLogLikelihoods_byParticipant(thisParticipant,thisLag) <- minNegLogLikelihood
+            allT1Estimates_byParticipant[thisParticipant,thisLag,:] <- bestEstimates
+            allT1LowerBounds_byParticipant[thisParticipant,thisLag,:] <- bestEstimateCIs[1,:]
+            allT1UpperBounds_byParticipant[thisParticipant,thisLag,:] <- bestEstimateCIs[2,:]
+            allT1MinNegLogLikelihoods_byParticipant[thisParticipant,thisLag] <- minNegLogLikelihood
 
             # Plot the distributions if required.
             if (plotFits){
@@ -368,19 +368,19 @@ for (thisSample in 1:nSamples){
             # Generate the 'pseudo-uniform' distribution, which is the
             # expected distribution of errors if a random guess was
             # provided on every trial.
-            pseudo_uniform in zeros(size(xDomain))){){
+            pseudo_uniform <- rep(0, length(xDomain))
 
             # Cycle through each possible T2 position.
-            for (thisPosNo in 1:numel(theseT2Pos)){
+            for (thisPosNo in 1:length(theseT2Pos)){
 
                 # Identify the actual T2 position corresponding to the
                 # position number. For example, the first position number
                 # might be the 7th position in the stream.
-                thisPos <- theseT2Pos(thisPosNo)
+                thisPos <- theseT2Pos[thisPosNo]
 
                 # Add to the pseudo-uniform distribution one unit for every
                 # possible error given that T2 position.
-                pseudo_uniform((1-thisPos-minErr+1):(nLetters-thisPos-minErr+1)) in pseudo_uniform((1-thisPos-minErr+1):(nLetters-thisPos-minErr+1))+ones(1,nLetters)){){
+                pseudo_uniform[(1-thisPos-minErr+1):(nLetters-thisPos-minErr+1)] = pseudo_uniform[(1-thisPos-minErr+1):(nLetters-thisPos-minErr+1)]+rep(1,nLetters)
 
             }
 
@@ -391,14 +391,14 @@ for (thisSample in 1:nSamples){
             for (thisReplicate in 1:nReplicates){
 
                 # Randomise starting values for each parameter.
-                pGuess <- max([smallNonZeroNumber rand])
+                pGuess <- max(c(smallNonZeroNumber, rand))
                 muGuess <- (2*muBound*rand)-muBound
                 sigmaGuess <- sigmaBound*rand+smallNonZeroNumber
 
                 # Compile to feed into the MLE function.
-                parameterGuess <- [pGuess muGuess sigmaGuess]
-                parameterLowerBound <- [smallNonZeroNumber mu_lb_T2 sigma_lb_T2]
-                parameterUpperBound <- [1 mu_ub_T2 sigma_ub_T2]
+                parameterGuess <- c(pGuess, muGuess, sigmaGuess)
+                parameterLowerBound <- c(smallNonZeroNumber, mu_lb_T2, sigma_lb_T2)
+                parameterUpperBound <- c(1, mu_ub_T2, sigma_ub_T2)
 
                 # Ensure guesses satisfy bounds.
                 parameterGuess <- max([parameterGuess;parameterLowerBound])
@@ -423,10 +423,10 @@ for (thisSample in 1:nSamples){
             }
 
             # Enter the best estimates into the parameter matrices.
-            allT2Estimates_byParticipant(thisParticipant,thisLag,:) <- bestEstimates
-            allT2LowerBounds_byParticipant(thisParticipant,thisLag,:) <- bestEstimateCIs(1,:)
-            allT2UpperBounds_byParticipant(thisParticipant,thisLag,:) <- bestEstimateCIs(2,:)
-            allT2MinNegLogLikelihoods_byParticipant(thisParticipant,thisLag) <- minNegLogLikelihood
+            allT2Estimates_byParticipant[thisParticipant,thisLag,:] <- bestEstimates
+            allT2LowerBounds_byParticipant[thisParticipant,thisLag,:] <- bestEstimateCIs[1,:]
+            allT2UpperBounds_byParticipant[thisParticipant,thisLag,:] <- bestEstimateCIs[2,:]
+            allT2MinNegLogLikelihoods_byParticipant[thisParticipant,thisLag) <- minNegLogLikelihood
 
             # Plot the distributions if required.
             if (plotFits){
@@ -464,19 +464,19 @@ for (thisSample in 1:nSamples){
             # Generate the 'pseudo-uniform' distribution, which is the
             # expected distribution of errors if a random guess was
             # provided on every trial.
-            pseudo_uniform in zeros(size(xDomain))){){
+            pseudo_uniform = rep(0, length(xDomain))
 
             # Cycle through each possible T2 position.
-            for (thisPosNo in 1:numel(theseT1T2Pos)){
+            for (thisPosNo in 1:length(theseT1T2Pos)){
 
                 # Identify the actual T2 position corresponding to the
                 # position number. For example, the first position number
                 # might be the 7th position in the stream.
-                thisPos <- theseT1T2Pos(thisPosNo)
+                thisPos <- theseT1T2Pos[thisPosNo]
 
                 # Add to the pseudo-uniform distribution one unit for every
                 # possible error given that T2 position.
-                pseudo_uniform((1-thisPos-minErr+1):(nLetters-thisPos-minErr+1)) in pseudo_uniform((1-thisPos-minErr+1):(nLetters-thisPos-minErr+1))+ones(1,nLetters)){){
+                pseudo_uniform[(1-thisPos-minErr+1):(nLetters-thisPos-minErr+1)] = pseudo_uniform[(1-thisPos-minErr+1):(nLetters-thisPos-minErr+1)]+rep(1,nLetters)
 
             }
 
@@ -487,18 +487,18 @@ for (thisSample in 1:nSamples){
             for (thisReplicate in 1:nReplicates){
 
                 # Randomise starting values for each parameter.
-                pGuess <- max([smallNonZeroNumber rand])
+                pGuess <- max(c(smallNonZeroNumber, rand))
                 muGuess <- (2*muBound*rand)-muBound
                 sigmaGuess <- sigmaBound*rand+smallNonZeroNumber
 
                 # Compile to feed into the MLE function.
-                parameterGuess <- [pGuess muGuess sigmaGuess]
-                parameterLowerBound <- [smallNonZeroNumber mu_lb_T1T2 sigma_lb_T1T2]
-                parameterUpperBound <- [1 mu_ub_T1T2 sigma_ub_T1T2]
+                parameterGuess <- c(pGuess, muGuess, sigmaGuess)
+                parameterLowerBound <- c(smallNonZeroNumber, mu_lb_T1T2, sigma_lb_T1T2)
+                parameterUpperBound <- c(1, mu_ub_T1T2, sigma_ub_T1T2)
 
                 # Ensure guesses satisfy bounds.
-                parameterGuess <- max([parameterGuess;parameterLowerBound])
-                parameterGuess <- min([parameterGuess;parameterUpperBound])
+                parameterGuess <- max(c(parameterGuess,parameterLowerBound))
+                parameterGuess <- min(c(parameterGuess,parameterUpperBound))
 
                 # Run the MLE function.
                 [currentEstimates, currentCIs] <- mle(theseT1T2Error, 'pdf', pdf_normmixture_single, 'start', parameterGuess, 'lower', parameterLowerBound, 'upper', parameterUpperBound, 'options', options)
@@ -519,10 +519,10 @@ for (thisSample in 1:nSamples){
             }
 
             # Enter the best estimates into the parameter matrices.
-            allT1T2Estimates_byParticipant(thisParticipant,thisLag,:) <- bestEstimates
-            allT1T2LowerBounds_byParticipant(thisParticipant,thisLag,:) <- bestEstimateCIs(1,:)
-            allT1T2UpperBounds_byParticipant(thisParticipant,thisLag,:) <- bestEstimateCIs(2,:)
-            allT1T2MinNegLogLikelihoods_byParticipant(thisParticipant,thisLag) <- minNegLogLikelihood
+            allT1T2Estimates_byParticipant[thisParticipant,thisLag,] <- bestEstimates
+            allT1T2LowerBounds_byParticipant[thisParticipant,thisLag,] <- bestEstimateCIs[1,]
+            allT1T2UpperBounds_byParticipant[thisParticipant,thisLag,] <- bestEstimateCIs[2,]
+            allT1T2MinNegLogLikelihoods_byParticipant[thisParticipant,thisLag] <- minNegLogLikelihood
 
             # Plot the distributions if required.
             if (plotFits){
@@ -544,7 +544,7 @@ for (thisSample in 1:nSamples){
     }
 
     # Keep track of progress in the command window.
-    fprintf('\n\n')
+    cat('\n\n')
 
     # Change directory to store model output.
     cd([thisPath 'ModelOutput'])
