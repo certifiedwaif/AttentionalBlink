@@ -1,17 +1,13 @@
 pdf_Mixture_Dual <- function(x,p1,mu1,sigma1,p2,mu2,sigma2){
-
-    global xDomain
-    global pseudo_uniform
-
-    pseudo_normal1 <- normpdf(xDomain,mu1,sigma1)*pseudo_uniform)
-    pseudo_normal2 <- normpdf(xDomain,mu2,sigma2)*pseudo_uniform)
+    pseudo_normal1 <- dnorm(xDomain,mu1,sigma1)*pseudo_uniform
+    pseudo_normal2 <- dnorm(xDomain,mu2,sigma2)*pseudo_uniform
 
     normFactor_uniform <- sum(pseudo_uniform)
     normFactor_normal1 <- sum(pseudo_normal1)
     normFactor_normal2 <- sum(pseudo_normal2)
 
-    if (normFactor_uniform  in  in  0){){
-        normFactor_uniform in 10^-8){){
+    if (normFactor_uniform  ==  0) {
+        normFactor_uniform = 10^-8
     }
 
     if (normFactor_normal1 == 0){
@@ -23,8 +19,8 @@ pdf_Mixture_Dual <- function(x,p1,mu1,sigma1,p2,mu2,sigma2){
     }
 
     uniResultTemp <- interp1(xDomain, pseudo_uniform, x)
-    normResult1Temp <- normpdf(x,mu1,sigma1)*uniResultTemp
-    normResult2Temp <- normpdf(x,mu2,sigma2)*uniResultTemp
+    normResult1Temp <- dnorm(x,mu1,sigma1)*uniResultTemp
+    normResult2Temp <- dnorm(x,mu2,sigma2)*uniResultTemp
 
     uniResultTemp <- uniResultTemp/normFactor_uniform
     normResultTemp1 <- normResult1Temp/normFactor_normal1
@@ -41,9 +37,8 @@ pdf_Mixture_Dual <- function(x,p1,mu1,sigma1,p2,mu2,sigma2){
     if (sum(length(normResult1)==length(uniResult))==2){
         tempResult <- normResult1+normResult2+uniResult
     } else {
-        tempResult <- normResult1+normResult2+uniResult'
+        tempResult <- normResult1+normResult2+t(uniResult)
     }
 
-    result <- tempResult
-
+    return(tempResult)
 }
