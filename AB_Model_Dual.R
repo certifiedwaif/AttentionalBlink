@@ -64,7 +64,7 @@ plotFits <- 0
 # Declare global variables that need to be accessed by the objective
 # function.
 global xDomain
-global pseudo_uniform){){
+global pseudo_uniform
 
 # Add folders to the MATLAB path.
 addpath(genpath(thisPath))
