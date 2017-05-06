@@ -1,3 +1,6 @@
+library(R.matlab)
+library(stringr)
+
 # This script fits a single-episode model (M1) to error data from
 # an attentional blink task.
 #
@@ -22,7 +25,7 @@
 # depending on your directory structure and your data.
 
 # Provide the path.
-thisPath <- '/Users/experimentalmode/Documents/MATLAB/ABFinal/'
+thisPath <- '/home/markg/Dropbox/AttentionalBlink/data'
 
 # Provide a name for each sample,
 # so files can be read and written with corresponding filenames.
@@ -51,7 +54,7 @@ sigmaBound <- 4
 # Ordinarily you wouldn't want to change these, but you might want to
 # provide a different function with a different number of parameters.
 nFreeParameters <- 3
-pdf_normmixture_single <- @pdf_Mixture_Single
+pdf_normmixture_single <- pdf_Mixture_Single
 
 # Just for diagnostics. Setting this to 1 will show the fitted
 # distributions for every participant at every lag, so it's not practical
@@ -79,10 +82,17 @@ warning('off', 'stats:mlecov:NonPosDefHessian')
 nSamples <- length(sampleNames)
 
 # Cycle through each sample
-for (thisSample in 1:nSamples){
+for (thisSample in 1:nSamples) {
 
     # Load the compiled data file for this sample.
-    load(['CompiledData_' sampleNames[thisSample] '.mat'])
+    data <- readMat(str_c('CompiledData_', sampleNames[thisSample], '.mat'))
+    allLags <- data$allLags
+    allT1Error <- data$allT1Error
+    allT1Pos <- data$allT1Pos
+    allT1Resp <- data$allT1Resp
+    allT2Error <- data$allT2Error
+    allT2Pos <- data$allT2Pos
+    allT2Resp <- data$allT2Resp
 
     # Extract the relevant task parameters specified above.
     nLetters <- allNLetters[thisSample]
@@ -101,7 +111,7 @@ for (thisSample in 1:nSamples){
 
     # Get the list of T1 errors and extract some properties.
     listT1Errors <- unique(allT1Error)# List of unique observed T1 errors
-    listT1Errors[is.nan(listT1Errors)] <- []# Get rid of NaN values
+    listT1Errors[is.nan(listT1Errors)] <- c()# Get rid of NaN values
     nT1Errors <- length(listT1Errors)# Number of unique observed T1 errors
     minT1Error <- min(listT1Errors)# Lowest (most negative) T1 error
     maxT1Error <- max(listT1Errors)# Highest (most positive) T1 error
@@ -110,7 +120,7 @@ for (thisSample in 1:nSamples){
 
     # The following output to the command window is just to keep track of
     # what the program is doing.
-    cat('\n\n%s\n\n', upper(sampleNames[thisSample]))
+    cat(sprintf('\n\n%s\n\n', str_to_upper(sampleNames[thisSample])))
 
     # Build empty matrices for storing parameter estimates for each
     # participant, at each lag. Also build matrices to store upper and
@@ -120,23 +130,23 @@ for (thisSample in 1:nSamples){
     # T2, even though that won't be used at any point in the analysis
     # proper. However, it can be worthwhile running it as a sanity check.
 
-    allT1Estimates_byParticipant <- array(data=NA, dim=c(nParticipants,nLags,nFreeParameters)
-    allT1LowerBounds_byParticipant <- array(data=NA, dim=c(nParticipants,nLags,nFreeParameters)
-    allT1UpperBounds_byParticipant <- array(data=NA, dim=c(nParticipants,nLags,nFreeParameters)
-    allT1MinNegLogLikelihoods_byParticipant <- array(data=NA, dim=c(nParticipants,nLags)
+    allT1Estimates_byParticipant <- array(data=NA, dim=c(nParticipants,nLags,nFreeParameters))
+    allT1LowerBounds_byParticipant <- array(data=NA, dim=c(nParticipants,nLags,nFreeParameters))
+    allT1UpperBounds_byParticipant <- array(data=NA, dim=c(nParticipants,nLags,nFreeParameters))
+    allT1MinNegLogLikelihoods_byParticipant <- array(data=NA, dim=c(nParticipants,nLags))
 
-    allT2Estimates_byParticipant <- array(data=NA, dim=c(nParticipants,nLags,nFreeParameters)
-    allT2LowerBounds_byParticipant <- array(data=NA, dim=c(nParticipants,nLags,nFreeParameters)
-    allT2UpperBounds_byParticipant <- array(data=NA, dim=c(nParticipants,nLags,nFreeParameters)
-    allT2MinNegLogLikelihoods_byParticipant <- array(data=NA, dim=c(nParticipants,nLags)
+    allT2Estimates_byParticipant <- array(data=NA, dim=c(nParticipants,nLags,nFreeParameters))
+    allT2LowerBounds_byParticipant <- array(data=NA, dim=c(nParticipants,nLags,nFreeParameters))
+    allT2UpperBounds_byParticipant <- array(data=NA, dim=c(nParticipants,nLags,nFreeParameters))
+    allT2MinNegLogLikelihoods_byParticipant <- array(data=NA, dim=c(nParticipants,nLags))
 
-    allT1T2Estimates_byParticipant <- array(data=NA, dim=c(nParticipants,nLags,nFreeParameters)
-    allT1T2LowerBounds_byParticipant <- array(data=NA, dim=c(nParticipants,nLags,nFreeParameters)
-    allT1T2UpperBounds_byParticipant <- array(data=NA, dim=c(nParticipants,nLags,nFreeParameters)
-    allT1T2MinNegLogLikelihoods_byParticipant <- array(data=NA, dim=c(nParticipants,nLags)
+    allT1T2Estimates_byParticipant <- array(data=NA, dim=c(nParticipants,nLags,nFreeParameters))
+    allT1T2LowerBounds_byParticipant <- array(data=NA, dim=c(nParticipants,nLags,nFreeParameters))
+    allT1T2UpperBounds_byParticipant <- array(data=NA, dim=c(nParticipants,nLags,nFreeParameters))
+    allT1T2MinNegLogLikelihoods_byParticipant <- array(data=NA, dim=c(nParticipants,nLags))
 
     # Set fit options.
-    options <- statset('MaxIter', fitMaxIter, 'MaxFunEvals', fitMaxFunEvals, 'Display', 'off')
+    # options <- statset('MaxIter', fitMaxIter, 'MaxFunEvals', fitMaxFunEvals, 'Display', 'off')
 
     # Cycle through each participant.
     for (thisParticipant in 1:nParticipants){
@@ -146,11 +156,11 @@ for (thisSample in 1:nSamples){
 
         # Extract the relevant lists of T1 and T2 errors, T1 and T2 stream
         # positions, and corresponding lags.
-        T1Error <- squeeze(allT1Error[thisParticipant,,])
-        T2Error <- squeeze(allT2Error[thisParticipant,,])
-        T1Pos <- squeeze(allT1Pos[thisParticipant,,])
-        T2Pos <- squeeze(allT2Pos[thisParticipant,,])
-        Lags <- squeeze(allLags[thisParticipant,,])
+        T1Error <- allT1Error[thisParticipant,,]
+        T2Error <- allT2Error[thisParticipant,,]
+        T1Pos <- allT1Pos[thisParticipant,,]
+        T2Pos <- allT2Pos[thisParticipant,,]
+        Lags <- allLags[thisParticipant,,]
 
         # Cycle through each lag.
         for (thisLag in 1:nLags){
@@ -186,7 +196,7 @@ for (thisSample in 1:nSamples){
                 for (thisReplace in 1:length(replaceCells)){
 
                     # Replace with a random possible value.
-                    theseT1Error[replaceCells[thisReplace]] <- randi(nLetters)-replacePositions[thisReplace]
+                    theseT1Error[replaceCells[thisReplace]] <- sample(1:nLetters, 1)-replacePositions[thisReplace]
 
                 }
 
@@ -208,7 +218,7 @@ for (thisSample in 1:nSamples){
                 for (thisReplace in 1:length(replaceCells)){
 
                     # Replace with a random possible value.
-                    theseT2Error[replaceCells[thisReplace]] <- randi(nLetters)-replacePositions[thisReplace]
+                    theseT2Error[replaceCells[thisReplace]] <- sample(nLetters, 1)-replacePositions[thisReplace]
 
                 }
 
@@ -258,7 +268,7 @@ for (thisSample in 1:nSamples){
             # replicate. Start at infinity so the first replicate
             # automatically qualifies as the best candidate up to that
             # point.
-            minNegLogLikelihood <- inf
+            minNegLogLikelihood <- Inf
 
             # Calculate the domain of possible errors (xDomain).
             xPosition <- unique(theseT1Pos)
@@ -297,9 +307,9 @@ for (thisSample in 1:nSamples){
             for (thisReplicate in 1:nReplicates){
 
                 # Randomise starting values for each parameter.
-                pGuess <- max([smallNonZeroNumber rand])
-                muGuess <- (2*muBound*rand)-muBound
-                sigmaGuess <- sigmaBound*rand+smallNonZeroNumber
+                pGuess <- max(c(smallNonZeroNumber, runif(1)))
+                muGuess <- (2*muBound*runif(1))-muBound
+                sigmaGuess <- sigmaBound*runif(1)+smallNonZeroNumber
 
                 # Compile to feed into the MLE function.
                 parameterGuess <- c(pGuess, muGuess, sigmaGuess)
@@ -308,14 +318,29 @@ for (thisSample in 1:nSamples){
 
                 # Ensure guesses satisfy bounds, and round them marginally
                 # up or down if necessary.
-                parameterGuess <- max(c(parameterGuess;parameterLowerBound))
-                parameterGuess <- min(c(parameterGuess;parameterUpperBound))
+                for (i in 1:length(parameterGuess)) {
+                    if (parameterGuess[i] < parameterLowerBound[i])
+                        parameterGuess[i] <- paramaterLowerBound[i]
+
+                    if (parameterGuess[i] > parameterUpperBound[i])
+                        parameterGuess[i] <- paramaterUpperBound[i]
+                }
 
                 # Run the MLE function.
                 [currentEstimates, currentCIs] <- mle(theseT1Error, 'pdf', pdf_normmixture_single, 'start', parameterGuess, 'lower', parameterLowerBound, 'upper', parameterUpperBound, 'options', options)
+                pdf_normmixture_single_par <- function(par)
+                {
+                    p <- par[1]
+                    mu <- par[2]
+                    sigma <- par[3]
+                    result <- exp(sum(log(pdf_normmixture_single(theseT1Error, p, mu, sigma))))
+                    cat("p ", p, " mu ", mu, " sigma ", sigma, " result ", result, "\n")
+                    return(result)
+                }                
+                fit <- optim(parameterGuess, pdf_normmixture_single_par, control=list(trace=7), method="BFGS")
 
                 # Compute the negative log likelihood of the fitted model.
-                thisNegLogLikelihood <- -sum(log(pdf_normmixture_single(theseT1Error,currentEstimates(1),currentEstimates(2),currentEstimates(3))))
+                thisNegLogLikelihood <- -sum(log(pdf_normmixture_single(theseT1Error,currentEstimates[1],currentEstimates[2],currentEstimates[3])))
 
                 # Check whether this is lower than the lowest so far.
                 if (minNegLogLikelihood > thisNegLogLikelihood){
