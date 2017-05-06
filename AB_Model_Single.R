@@ -66,17 +66,17 @@ plotFits <- 0
 
 # Declare global variables that need to be accessed by the objective
 # function.
-global xDomain
-global pseudo_uniform
+#global xDomain
+#global pseudo_uniform
 
 # Add folders to the MATLAB path.
-addpath(genpath(thisPath))
-cd([thisPath 'Data'])
+#addpath(genpath(thisPath))
+#cd([thisPath 'Data'])
 
 # Turn off this warning to prevent it from filling the command
 # window. This is only a problem if you get it on most
 # replicates of a fit.
-warning('off', 'stats:mlecov:NonPosDefHessian')
+#warning('off', 'stats:mlecov:NonPosDefHessian')
 
 # Determine number of samples
 nSamples <- length(sampleNames)
@@ -333,11 +333,11 @@ for (thisSample in 1:nSamples) {
                     p <- par[1]
                     mu <- par[2]
                     sigma <- par[3]
-                    result <- exp(sum(log(pdf_normmixture_single(theseT1Error, p, mu, sigma))))
+                    result <- pdf_normmixture_single(theseT1Error, p, mu, sigma)
                     cat("p ", p, " mu ", mu, " sigma ", sigma, " result ", result, "\n")
                     return(result)
                 }                
-                fit <- optim(parameterGuess, pdf_normmixture_single_par, control=list(trace=7), method="BFGS")
+                fit <- optim(parameterGuess, pdf_normmixture_single_par, lower=parameterLowerBound, upper=parameterUpperBound, control=list(trace=7), method="L-BFGS-B")
 
                 # Compute the negative log likelihood of the fitted model.
                 thisNegLogLikelihood <- -sum(log(pdf_normmixture_single(theseT1Error,currentEstimates[1],currentEstimates[2],currentEstimates[3])))
