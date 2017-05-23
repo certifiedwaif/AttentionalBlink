@@ -1,3 +1,6 @@
+library(R.matlab)
+library(stringr)
+
 # This script fits a dual-episode model (M2) to error data from
 # an attentional blink task.
 #
@@ -22,7 +25,7 @@
 # depending on your directory structure and your data.
 
 # Provide the path.
-thisPath <- '/Users/experimentalmode/Documents/MATLAB/ABFinal/'
+thisPath <- '/home/markg/Dropbox/AttentionalBlink/data'
 
 # Provide a name for each sample,
 # so files can be read and written with corresponding filenames.
@@ -51,6 +54,7 @@ sigmaBound <- 4
 # Ordinarily you wouldn't want to change these, but you might want to
 # provide a different function with a different number of parameters.
 nFreeParameters <- 6
+source("pdf_Mixture_Dual.R")
 pdf_normmixture <- pdf_Mixture_Dual
 
 # Just for diagnostics. Setting this to 1 will show the fitted
@@ -82,8 +86,15 @@ nSamples <- length(sampleNames)
 for (thisSample in 1:nSamples){
 
     # Load the compiled data file for this sample.
-    load(['CompiledData_' sampleNames[thisSample] '.mat'])
-
+    data <- readMat(str_c('data/CompiledData_', sampleNames[thisSample], '.mat'))
+    allLags <- data$allLags
+    allT1Error <- data$allT1Error
+    allT1Pos <- data$allT1Pos
+    allT1Resp <- data$allT1Resp
+    allT2Error <- data$allT2Error
+    allT2Pos <- data$allT2Pos
+    allT2Resp <- data$allT2Resp
+    
     # Extract the relevant task parameters specified above.
     nLetters <- allNLetters[thisSample]
     nTrials <- allNTrials[thisSample]
@@ -91,16 +102,16 @@ for (thisSample in 1:nSamples){
     nParticipants <- allNParticipants[thisSample]
 
     # Work out the number of lags.
-    listLags <- unique(allLags[])
-    listLags[is.nan(listLags)] <- []
+    listLags <- unique(allLags)
+    listLags[is.nan(listLags)] <- c()
     nLags <- length(listLags)
 
     # Work out possible positions in the stream for T1.
-    listT1Pos <- unique(allT1Pos[:])
+    listT1Pos <- unique(allT1Pos)
     nT1Pos <- length(listT1Pos)
 
     # Get the list of T1 errors and extract some properties.
-    listT1Errors <- unique(allT1Error[])# List of unique observed T1 errors
+    listT1Errors <- unique(allT1Error)# List of unique observed T1 errors
     listT1Errors[is.nan(listT1Errors)] <- c()# Get rid of NaN values
     nT1Errors <- length(listT1Errors)# Number of unique observed T1 errors
     minT1Error <- min(listT1Errors)# Lowest (most negative) T1 error
@@ -110,7 +121,7 @@ for (thisSample in 1:nSamples){
 
     # The following output to the command window is just to keep track of
     # what the program is doing.
-    cat('\n\n%s\n\n', upper[sampleNames[thisSample]])
+    cat('\n\n%s\n\n', str_to_upper(sampleNames[thisSample]))
 
     # Build empty matrices for storing parameter estimates for each
     # participant, at each lag. Also build matrices to store upper and
@@ -147,11 +158,11 @@ for (thisSample in 1:nSamples){
 
         # Extract the relevant lists of T1 and T2 errors, T1 and T2 stream
         # positions, and corresponding lags.
-        #T1Error <- squeeze(allT1Error[thisParticipant,,])
-        #T2Error <- squeeze(allT2Error[thisParticipant,,))
-        #T1Pos <- squeeze(allT1Pos[thisParticipant,,])
-        #T2Pos <- squeeze(allT2Pos[thisParticipant,,])
-        #Lags <- squeeze(allLags[thisParticipant,,])
+        T1Error <- allT1Error[thisParticipant,,]
+        T2Error <- allT2Error[thisParticipant,,]
+        T1Pos <- allT1Pos[thisParticipant,,]
+        T2Pos <- allT2Pos[thisParticipant,,]
+        Lags <- allLags[thisParticipant,,]
 
         # Cycle through each lag.
         for (thisLag in 1:nLags){
@@ -175,7 +186,7 @@ for (thisSample in 1:nSamples){
             theseT1Error <- t(T1Error[hasThisLag])
             theseT1Pos <- t(T1Pos[hasThisLag])
 
-            if (sum(is.nan[theseT1Error]) > 0){# If there is at least one NaN
+            if (sum(is.nan(theseT1Error)) > 0) {# If there is at least one NaN
 
                 # Find NaNs.
                 replaceCells <- which(is.nan[theseT1Error])
@@ -198,7 +209,7 @@ for (thisSample in 1:nSamples){
             theseT2Error <- t(T2Error[hasThisLag])
             theseT2Pos <- t(T2Pos[hasThisLag])
 
-            if (sum(is.nan[theseT2Error]) > 0){# If there is at least one NaN
+            if (sum(is.nan(theseT2Error)) > 0){# If there is at least one NaN
 
                 # Find NaNs.
                 replaceCells <- which(is.nan(theseT2Error))
@@ -262,7 +273,7 @@ for (thisSample in 1:nSamples){
             # replicate. Start at infinity so the first replicate
             # automatically qualifies as the best candidate up to that
             # point.
-            minNegLogLikelihood <- inf
+            minNegLogLikelihood <- Inf
 
             # Calculate the domain of possible errors (xDomain).
             xPosition <- unique(theseT1Pos)
@@ -278,7 +289,7 @@ for (thisSample in 1:nSamples){
             # distribution because the most extreme errors are only
             # possible on trials in which targets appear at their most
             # extreme positions.
-            pseudo_uniform <- rep(0, size(xDomain))
+            pseudo_uniform <- rep(0, length(xDomain))
 
             # Cycle through each possible T1 position.
             for (thisPosNo in 1:length(theseT1Pos)){
@@ -301,12 +312,12 @@ for (thisSample in 1:nSamples){
             for (thisReplicate in 1:nReplicates){
 
                 # Randomise starting values for each parameter.
-                p1Guess <- rand
-                mu1Guess <- (2*muBound*rand)-muBound
-                sigma1Guess <- sigmaBound*rand
-                p2Guess <- rand
-                mu2Guess <- listLags[thisLag]+(2*muBound*rand)-muBound
-                sigma2Guess <- sigmaBound*rand
+                p1Guess <- runif(1)
+                mu1Guess <- (2*muBound*runif(1))-muBound
+                sigma1Guess <- sigmaBound*runif(1)
+                p2Guess <- runif(1)
+                mu2Guess <- listLags[thisLag]+(2*muBound*runif(1))-muBound
+                sigma2Guess <- sigmaBound*runif(1)
 
                 # Ensure guesses satisfy bounds, and round them marginally
                 # up or down if necessary.
@@ -326,18 +337,20 @@ for (thisSample in 1:nSamples){
                 #[currentEstimates, currentCIs] <- mle(theseT1Error, 'pdf', pdf_normmixture, 'start', parameterGuess, 'lower', parameterLowerBound, 'upper', parameterUpperBound, 'options', options)
                 pdf_normmixture_double_par <- function(par)
                 {
-                  p <- par[1]
-                  mu <- par[2]
-                  sigma <- par[3]
-                  result <- -pdf_normmixture_double(theseT1Error, p, mu, sigma)
-                  cat("p ", p, " mu ", mu, " sigma ", sigma, " result ", result, "\n")
-                  return(exp(sum(log(result))))
+                  p1 <- par[1]
+                  mu1 <- par[2]
+                  sigma1 <- par[3]
+                  p2 <- par[4]
+                  mu2 <- par[5]
+                  sigma2 <- par[6]
+                  result <- -pdf_Mixture_Dual(theseT1Error, p1, mu1, sigma1, p2, mu2, sigma2)
+                  return(sum(result))
                 }                
-                fit <- optim(parameterGuess, pdf_normmixture_double_par, lower=parameterLowerBound, upper=parameterUpperBound, control=list(trace=6), method="L-BFGS-B")
-                
+                fit <- optim(parameterGuess, pdf_normmixture_double_par, lower=parameterLowerBound, upper=parameterUpperBound, control=list(trace=0), method="L-BFGS-B")
+                currentEstimates <- fit$par
                 
                 # Compute the negative log likelihood of the fitted model.
-                thisNegLogLikelihood <- -sum(log(pdf_normmixture(theseT1Error,currentEstimates(1),currentEstimates(2),currentEstimates(3),currentEstimates(4),currentEstimates(5),currentEstimates(6))))
+                thisNegLogLikelihood <- -sum(log(pdf_normmixture(theseT1Error,currentEstimates[1],currentEstimates[2],currentEstimates[3],currentEstimates[4],currentEstimates[5],currentEstimates[6])))
 
                 # Check whether this is lower than the lowest so far.
                 if (minNegLogLikelihood > thisNegLogLikelihood){
@@ -345,7 +358,7 @@ for (thisSample in 1:nSamples){
                     # If so, store this as the current best estimate.
                     minNegLogLikelihood <- thisNegLogLikelihood
                     bestEstimates <- currentEstimates
-                    bestEstimateCIs <- currentCIs
+                    #bestEstimateCIs <- currentCIs
 
                 }
 
@@ -405,7 +418,7 @@ for (thisSample in 1:nSamples){
 
             # Keep track of the minimum negative log likelihood on each
             # replicate.
-            minNegLogLikelihood <- inf
+            minNegLogLikelihood <- Inf
 
             # Calculate the domain of possible errors (xDomain).
             xPosition <- unique(theseT2Pos)
@@ -418,7 +431,7 @@ for (thisSample in 1:nSamples){
             # Generate the 'pseudo-uniform' distribution, which is the
             # expected distribution of errors if a random guess was
             # provided on every trial.
-            pseudo_uniform <- rep(length(xDomain))
+            pseudo_uniform <- rep(0, length(xDomain))
 
             # Cycle through each possible T2 position.
             for (thisPosNo in 1:length(theseT2Pos)){
@@ -466,17 +479,20 @@ for (thisSample in 1:nSamples){
                 #[currentEstimates, currentCIs] <- mle(theseT2Error, 'pdf', pdf_normmixture, 'start', parameterGuess, 'lower', parameterLowerBound, 'upper', parameterUpperBound, 'options', options)
                 pdf_normmixture_double_par <- function(par)
                 {
-                  p <- par[1]
-                  mu <- par[2]
-                  sigma <- par[3]
-                  result <- -pdf_normmixture_double(theseT1Error, p, mu, sigma)
-                  cat("p ", p, " mu ", mu, " sigma ", sigma, " result ", result, "\n")
-                  return(exp(sum(log(result))))
+                  p1 <- par[1]
+                  mu1 <- par[2]
+                  sigma1 <- par[3]
+                  p2 <- par[4]
+                  mu2 <- par[5]
+                  sigma2 <- par[6]
+                  result <- -pdf_Mixture_Dual(theseT1Error, p1, mu1, sigma1, p2, mu2, sigma2)
+                  return(sum(result))
                 }                
-                fit <- optim(parameterGuess, pdf_normmixture_double_par, lower=parameterLowerBound, upper=parameterUpperBound, control=list(trace=6), method="L-BFGS-B")
-                
+                fit <- optim(parameterGuess, pdf_normmixture_double_par, lower=parameterLowerBound, upper=parameterUpperBound, control=list(trace=0), method="L-BFGS-B")
+                currentEstimates <- fit$par
+                    
                 # Compute the negative log likelihood of the fitted model.
-                thisNegLogLikelihood <- -sum(log(pdf_normmixture(theseT2Error,currentEstimates(1),currentEstimates(2),currentEstimates(3),currentEstimates(4),currentEstimates(5),currentEstimates(6))))
+                thisNegLogLikelihood <- -sum(log(pdf_normmixture(theseT2Error,currentEstimates[1],currentEstimates[2],currentEstimates[3],currentEstimates[4],currentEstimates[5],currentEstimates[6])))
 
                 # Check whether this is lower than the lowest so far.
                 if (minNegLogLikelihood > thisNegLogLikelihood){
@@ -484,7 +500,7 @@ for (thisSample in 1:nSamples){
                     # If so, store this as the current best estimate.
                     minNegLogLikelihood <- thisNegLogLikelihood
                     bestEstimates <- currentEstimates
-                    bestEstimateCIs <- currentCIs
+                    #bestEstimateCIs <- currentCIs
 
                 }
 
@@ -499,8 +515,8 @@ for (thisSample in 1:nSamples){
             # Recover confidence intervals on the estimates.
             p1 <- bestEstimateCIs[,1]
             p2 <- bestEstimateCIs[,4]
-            bestEstimateCIs[:,1] <- p1*(1-p2)
-            bestEstimateCIs[:,4] <- p1*p2
+            bestEstimateCIs[,1] <- p1*(1-p2)
+            bestEstimateCIs[,4] <- p1*p2
 
             # Check whether a switch in the order of parameters is
             # required.
@@ -542,7 +558,7 @@ for (thisSample in 1:nSamples){
 
             # Keep track of the minimum negative log likelihood on each
             # replicate.
-            minNegLogLikelihood <- inf
+            minNegLogLikelihood <- Inf
 
             # Calculate the domain of possible errors (xDomain).
             theseT1T2Pos <- theseT2Pos# Errors are relative to T2
@@ -564,7 +580,7 @@ for (thisSample in 1:nSamples){
                 # Identify the actual T1 or T2 position corresponding to the
                 # position number. For example, the first position number
                 # might be the 7th position in the stream.
-                thisPos <- theseT1T2Pos(thisPosNo)
+                thisPos <- theseT1T2Pos[thisPosNo]
 
                 # Add to the pseudo-uniform distribution one unit for every
                 # possible error given that T1 or T2 position.
@@ -601,7 +617,20 @@ for (thisSample in 1:nSamples){
                 parameterUpperBound <- c(1, mu1_ub_T1T2, sigma1_ub_T1T2, 1, mu2_ub_T1T2, sigma2_ub_T1T2)
 
                 # Run the MLE function.
-                [currentEstimates, currentCIs] <- mle(theseT1T2Error, 'pdf', pdf_normmixture, 'start', parameterGuess, 'lower', parameterLowerBound, 'upper', parameterUpperBound, 'options', options)
+                # [currentEstimates, currentCIs] <- mle(theseT1T2Error, 'pdf', pdf_normmixture, 'start', parameterGuess, 'lower', parameterLowerBound, 'upper', parameterUpperBound, 'options', options)
+                pdf_normmixture_double_par <- function(par)
+                {
+                  p1 <- par[1]
+                  mu1 <- par[2]
+                  sigma1 <- par[3]
+                  p2 <- par[4]
+                  mu2 <- par[5]
+                  sigma2 <- par[6]
+                  result <- -pdf_Mixture_Dual(theseT1Error, p1, mu1, sigma1, p2, mu2, sigma2)
+                  return(sum(result))
+                }                
+                fit <- optim(parameterGuess, pdf_normmixture_double_par, lower=parameterLowerBound, upper=parameterUpperBound, control=list(trace=6), method="L-BFGS-B")
+                currentEstimates <- fit$par
 
                 # Compute the negative log likelihood of the fitted model.
                 thisNegLogLikelihood <- -sum(log(pdf_normmixture(theseT1T2Error,currentEstimates(1),currentEstimates(2),currentEstimates(3),currentEstimates(4),currentEstimates(5),currentEstimates(6))))
@@ -651,9 +680,9 @@ for (thisSample in 1:nSamples){
                 tBars <- tBars/sum(tBars)
                 bar(xDomain,tBars)
                 hold on
-                p1 <- bestEstimates(1) + bestEstimates(4)
-                p2 <- bestEstimates(4)/p1
-                yModelPlot <- pdf_normmixture(xDomain, p1, bestEstimates(2), bestEstimates(3), p2, bestEstimates(5), bestEstimates(6))
+                p1 <- bestEstimates[1] + bestEstimates[4]
+                p2 <- bestEstimates[4]/p1
+                yModelPlot <- pdf_normmixture(xDomain, p1, bestEstimates[2], bestEstimates[3], p2, bestEstimates[5], bestEstimates[6])
                 plot(xDomain,yModelPlot,'r--')
                 axis square
                 axis([minErr-1 maxErr+1 0 0.75])
@@ -666,7 +695,7 @@ for (thisSample in 1:nSamples){
     }
 
     # Keep track of progress in the command window.
-    fprintf('\n\n')
+    cat('\n\n')
 
     # Change directory to store model output.
     cd([thisPath 'ModelOutput'])
@@ -678,3 +707,4 @@ for (thisSample in 1:nSamples){
 
 # Turn this warning back on.
 warning('on', 'stats:mlecov:NonPosDefHessian')
+
