@@ -327,17 +327,17 @@ for (thisSample in 1:nSamples) {
                 }
 
                 # Run the MLE function.
-                [currentEstimates, currentCIs] <- mle(theseT1Error, 'pdf', pdf_normmixture_single, 'start', parameterGuess, 'lower', parameterLowerBound, 'upper', parameterUpperBound, 'options', options)
+                # [currentEstimates, currentCIs] <- mle(theseT1Error, 'pdf', pdf_normmixture_single, 'start', parameterGuess, 'lower', parameterLowerBound, 'upper', parameterUpperBound, 'options', options)
                 pdf_normmixture_single_par <- function(par)
                 {
                     p <- par[1]
                     mu <- par[2]
                     sigma <- par[3]
-                    result <- pdf_normmixture_single(theseT1Error, p, mu, sigma)
+                    result <- -pdf_normmixture_single(theseT1Error, p, mu, sigma)
                     cat("p ", p, " mu ", mu, " sigma ", sigma, " result ", result, "\n")
-                    return(result)
+                    return(exp(sum(log(result))))
                 }                
-                fit <- optim(parameterGuess, pdf_normmixture_single_par, lower=parameterLowerBound, upper=parameterUpperBound, control=list(trace=7), method="L-BFGS-B")
+                fit <- optim(parameterGuess, pdf_normmixture_single_par, lower=parameterLowerBound, upper=parameterUpperBound, control=list(trace=6), method="L-BFGS-B")
 
                 # Compute the negative log likelihood of the fitted model.
                 thisNegLogLikelihood <- -sum(log(pdf_normmixture_single(theseT1Error,currentEstimates[1],currentEstimates[2],currentEstimates[3])))
@@ -416,9 +416,9 @@ for (thisSample in 1:nSamples) {
             for (thisReplicate in 1:nReplicates){
 
                 # Randomise starting values for each parameter.
-                pGuess <- max(c(smallNonZeroNumber, rand))
-                muGuess <- (2*muBound*rand)-muBound
-                sigmaGuess <- sigmaBound*rand+smallNonZeroNumber
+                pGuess <- max(c(smallNonZeroNumber, runif(1)))
+                muGuess <- (2*muBound*runif(1))-muBound
+                sigmaGuess <- sigmaBound*runif(1)+smallNonZeroNumber
 
                 # Compile to feed into the MLE function.
                 parameterGuess <- c(pGuess, muGuess, sigmaGuess)
@@ -426,11 +426,21 @@ for (thisSample in 1:nSamples) {
                 parameterUpperBound <- c(1, mu_ub_T2, sigma_ub_T2)
 
                 # Ensure guesses satisfy bounds.
-                parameterGuess <- max([parameterGuess;parameterLowerBound])
-                parameterGuess <- min([parameterGuess;parameterUpperBound])
+                parameterGuess <- max(parameterGuess,parameterLowerBound)
+                parameterGuess <- min(parameterGuess,parameterUpperBound)
 
                 # Run the MLE function.
-                [currentEstimates, currentCIs] <- mle(theseT2Error, 'pdf', pdf_normmixture_single, 'start', parameterGuess, 'lower', parameterLowerBound, 'upper', parameterUpperBound, 'options', options)
+                # [currentEstimates, currentCIs] <- mle(theseT2Error, 'pdf', pdf_normmixture_single, 'start', parameterGuess, 'lower', parameterLowerBound, 'upper', parameterUpperBound, 'options', options)
+                pdf_normmixture_single_par <- function(par)
+                {
+                    p <- par[1]
+                    mu <- par[2]
+                    sigma <- par[3]
+                    result <- -pdf_normmixture_single(theseT1Error, p, mu, sigma)
+                    cat("p ", p, " mu ", mu, " sigma ", sigma, " result ", result, "\n")
+                    return(exp(sum(log(result))))
+                }                
+                fit <- optim(parameterGuess, pdf_normmixture_single_par, lower=parameterLowerBound, upper=parameterUpperBound, control=list(trace=6), method="L-BFGS-B")
 
                 # Compute the negative log likelihood of the fitted model.
                 thisNegLogLikelihood <- -sum(log(pdf_normmixture_single(theseT2Error,currentEstimates(1),currentEstimates(2),currentEstimates(3))))
@@ -526,7 +536,17 @@ for (thisSample in 1:nSamples) {
                 parameterGuess <- min(c(parameterGuess,parameterUpperBound))
 
                 # Run the MLE function.
-                [currentEstimates, currentCIs] <- mle(theseT1T2Error, 'pdf', pdf_normmixture_single, 'start', parameterGuess, 'lower', parameterLowerBound, 'upper', parameterUpperBound, 'options', options)
+                # [currentEstimates, currentCIs] <- mle(theseT1T2Error, 'pdf', pdf_normmixture_single, 'start', parameterGuess, 'lower', parameterLowerBound, 'upper', parameterUpperBound, 'options', options)
+                pdf_normmixture_single_par <- function(par)
+                {
+                    p <- par[1]
+                    mu <- par[2]
+                    sigma <- par[3]
+                    result <- -pdf_normmixture_single(theseT1Error, p, mu, sigma)
+                    cat("p ", p, " mu ", mu, " sigma ", sigma, " result ", result, "\n")
+                    return(exp(sum(log(result))))
+                }                
+                fit <- optim(parameterGuess, pdf_normmixture_single_par, lower=parameterLowerBound, upper=parameterUpperBound, control=list(trace=6), method="L-BFGS-B")
 
                 # Compute the negative log likelihood of the fitted model.
                 thisNegLogLikelihood <- -sum(log(pdf_normmixture_single(theseT1T2Error,currentEstimates(1),currentEstimates(2),currentEstimates(3))))
@@ -580,4 +600,4 @@ for (thisSample in 1:nSamples) {
 }
 
 # Turn this warning back on.
-warning('on', 'stats:mlecov:NonPosDefHessian')
+# warning('on', 'stats:mlecov:NonPosDefHessian')

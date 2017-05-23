@@ -51,7 +51,7 @@ sigmaBound <- 4
 # Ordinarily you wouldn't want to change these, but you might want to
 # provide a different function with a different number of parameters.
 nFreeParameters <- 6
-pdf_normmixture <- @pdf_Mixture_Dual
+pdf_normmixture <- pdf_Mixture_Dual
 
 # Just for diagnostics. Setting this to 1 will show the fitted
 # distributions for every participant at every lag, so it's not practical
@@ -63,17 +63,17 @@ plotFits <- 0
 
 # Declare global variables that need to be accessed by the objective
 # function.
-global xDomain
-global pseudo_uniform
+#global xDomain
+#global pseudo_uniform
 
 # Add folders to the MATLAB path.
-addpath(genpath(thisPath))
-cd([thisPath 'Data'])
+#addpath(genpath(thisPath))
+#cd([thisPath 'Data'])
 
 # Turn off this warning to prevent it from filling the command
 # window. This is only a problem if you get it on most
 # replicates of a fit.
-warning('off', 'stats:mlecov:NonPosDefHessian')
+#warning('off', 'stats:mlecov:NonPosDefHessian')
 
 # Determine number of samples
 nSamples <- length(sampleNames)
@@ -137,7 +137,7 @@ for (thisSample in 1:nSamples){
     allT1T2MinNegLogLikelihoods_byParticipant <- array(data=NA,dim=c(nParticipants,nLags))
 
     # Set fit options.
-    options <- statset('MaxIter', fitMaxIter, 'MaxFunEvals', fitMaxFunEvals, 'Display', 'off')
+    #options <- statset('MaxIter', fitMaxIter, 'MaxFunEvals', fitMaxFunEvals, 'Display', 'off')
 
     # Cycle through each participant.
     for (thisParticipant in 1:nParticipants){
@@ -147,11 +147,11 @@ for (thisSample in 1:nSamples){
 
         # Extract the relevant lists of T1 and T2 errors, T1 and T2 stream
         # positions, and corresponding lags.
-        T1Error <- squeeze(allT1Error[thisParticipant,,])
-        T2Error <- squeeze(allT2Error[thisParticipant,,))
-        T1Pos <- squeeze(allT1Pos[thisParticipant,,])
-        T2Pos <- squeeze(allT2Pos[thisParticipant,,])
-        Lags <- squeeze(allLags[thisParticipant,,])
+        #T1Error <- squeeze(allT1Error[thisParticipant,,])
+        #T2Error <- squeeze(allT2Error[thisParticipant,,))
+        #T1Pos <- squeeze(allT1Pos[thisParticipant,,])
+        #T2Pos <- squeeze(allT2Pos[thisParticipant,,])
+        #Lags <- squeeze(allLags[thisParticipant,,])
 
         # Cycle through each lag.
         for (thisLag in 1:nLags){
@@ -187,8 +187,9 @@ for (thisSample in 1:nSamples){
                 for (thisReplace in 1:length(replaceCells)){
 
                     # Replace with a random possible value.
-                    theseT1Error[replaceCells[thisReplace]] <- randi(nLetters)-replacePositions[thisReplace]
-
+                    #theseT1Error[replaceCells[thisReplace]] <- randi(nLetters)-replacePositions[thisReplace]
+                    theseT1Error[replaceCells[thisReplace]] <- sample.int(nLetters, size = 1)-replacePositions[thisReplace]
+                    
                 }
 
             }
@@ -209,7 +210,7 @@ for (thisSample in 1:nSamples){
                 for (thisReplace in 1:length[replaceCells]){
 
                     # Replace with a random possible value.
-                    theseT2Error[replaceCells[thisReplace]] <- randi(nLetters)-replacePositions[thisReplace]
+                    theseT2Error[replaceCells[thisReplace]] <- sample.int(nLetters, size = 1)-replacePositions[thisReplace]
 
                 }
 
@@ -222,8 +223,8 @@ for (thisSample in 1:nSamples){
             # Unpack mean (latency) bounds for T1.
             mu1_lb_T1 <- -muBound
             mu1_ub_T1 <- +muBound
-            mu2_lb_T1 <- listLags(thisLag)-muBound
-            mu2_ub_T1 <- listLags(thisLag)+muBound
+            mu2_lb_T1 <- listLags[thisLag]-muBound
+            mu2_ub_T1 <- listLags[thisLag]+muBound
 
             # Unpack SD (precision) bounds for T1.
             sigma1_lb_T1 <- smallNonZeroNumber
@@ -322,8 +323,19 @@ for (thisSample in 1:nSamples){
                 parameterUpperBound <- c(1, mu1_ub_T1, sigma1_ub_T1, 1, mu2_ub_T1, sigma2_ub_T1)
 
                 # Run the MLE function.
-                [currentEstimates, currentCIs] <- mle(theseT1Error, 'pdf', pdf_normmixture, 'start', parameterGuess, 'lower', parameterLowerBound, 'upper', parameterUpperBound, 'options', options)
-
+                #[currentEstimates, currentCIs] <- mle(theseT1Error, 'pdf', pdf_normmixture, 'start', parameterGuess, 'lower', parameterLowerBound, 'upper', parameterUpperBound, 'options', options)
+                pdf_normmixture_double_par <- function(par)
+                {
+                  p <- par[1]
+                  mu <- par[2]
+                  sigma <- par[3]
+                  result <- -pdf_normmixture_double(theseT1Error, p, mu, sigma)
+                  cat("p ", p, " mu ", mu, " sigma ", sigma, " result ", result, "\n")
+                  return(exp(sum(log(result))))
+                }                
+                fit <- optim(parameterGuess, pdf_normmixture_double_par, lower=parameterLowerBound, upper=parameterUpperBound, control=list(trace=6), method="L-BFGS-B")
+                
+                
                 # Compute the negative log likelihood of the fitted model.
                 thisNegLogLikelihood <- -sum(log(pdf_normmixture(theseT1Error,currentEstimates(1),currentEstimates(2),currentEstimates(3),currentEstimates(4),currentEstimates(5),currentEstimates(6))))
 
@@ -358,9 +370,9 @@ for (thisSample in 1:nSamples){
             # required. When the parameter limits overlap, T1 and and
             # T2 episode estimates can get switched around. We take the
             # later one to be T2.
-            if (bestEstimates(2) > bestEstimates(5)){
-                bestEstimates <- bestEstimates([4 5 6 1 2 3])
-                bestEstimateCIs <- bestEstimateCIs(,[4 5 6 1 2 3])
+            if (bestEstimates[2] > bestEstimates[5]){
+                bestEstimates <- bestEstimates[c(4, 5, 6, 1, 2, 3)]
+                bestEstimateCIs <- bestEstimateCIs[,c(4, 5, 6, 1, 2, 3)]
             }
 
             # Enter the best estimates into the parameter matrices.
@@ -377,9 +389,9 @@ for (thisSample in 1:nSamples){
                 tBars <- tBars/sum(tBars)
                 bar(xDomain,tBars)
                 hold on
-                p1 <- bestEstimates(1) + bestEstimates(4)
-                p2 <- bestEstimates(4)/p1
-                yModelPlot <- pdf_normmixture(xDomain, p1, bestEstimates(2), bestEstimates(3), p2, bestEstimates(5), bestEstimates(6))
+                p1 <- bestEstimates[1] + bestEstimates[4]
+                p2 <- bestEstimates[4]/p1
+                yModelPlot <- pdf_normmixture(xDomain, p1, bestEstimates[2], bestEstimates[3], p2, bestEstimates[5], bestEstimates[6])
                 plot(xDomain,yModelPlot,'r--')
                 axis square
                 axis([minErr-1 maxErr+1 0 0.75])
@@ -429,12 +441,12 @@ for (thisSample in 1:nSamples){
             for (thisReplicate in 1:nReplicates){
 
                 # Randomise starting values for each parameter.
-                p1Guess <- rand
-                mu1Guess <- (2*muBound*rand)-muBound
-                sigma1Guess <- sigmaBound*rand+smallNonZeroNumber
-                p2Guess <- rand
-                mu2Guess <- -listLags[thisLag]+(2*muBound*rand)-muBound
-                sigma2Guess <- sigmaBound*rand+smallNonZeroNumber
+                p1Guess <- runif(1)
+                mu1Guess <- (2*muBound*runif(1))-muBound
+                sigma1Guess <- sigmaBound*runif(1)+smallNonZeroNumber
+                p2Guess <- runif(1)
+                mu2Guess <- -listLags[thisLag]+(2*muBound*runif(1))-muBound
+                sigma2Guess <- sigmaBound*runif(1)+smallNonZeroNumber
 
                 # Ensure guesses satisfy bounds, and round them marginally
                 # up or down if necessary.
@@ -451,8 +463,18 @@ for (thisSample in 1:nSamples){
                 parameterUpperBound <- c(1, mu1_ub_T2, sigma1_ub_T2, 1, mu2_ub_T2, sigma2_ub_T2)
 
                 # Run the MLE function.
-                [currentEstimates, currentCIs] <- mle(theseT2Error, 'pdf', pdf_normmixture, 'start', parameterGuess, 'lower', parameterLowerBound, 'upper', parameterUpperBound, 'options', options)
-
+                #[currentEstimates, currentCIs] <- mle(theseT2Error, 'pdf', pdf_normmixture, 'start', parameterGuess, 'lower', parameterLowerBound, 'upper', parameterUpperBound, 'options', options)
+                pdf_normmixture_double_par <- function(par)
+                {
+                  p <- par[1]
+                  mu <- par[2]
+                  sigma <- par[3]
+                  result <- -pdf_normmixture_double(theseT1Error, p, mu, sigma)
+                  cat("p ", p, " mu ", mu, " sigma ", sigma, " result ", result, "\n")
+                  return(exp(sum(log(result))))
+                }                
+                fit <- optim(parameterGuess, pdf_normmixture_double_par, lower=parameterLowerBound, upper=parameterUpperBound, control=list(trace=6), method="L-BFGS-B")
+                
                 # Compute the negative log likelihood of the fitted model.
                 thisNegLogLikelihood <- -sum(log(pdf_normmixture(theseT2Error,currentEstimates(1),currentEstimates(2),currentEstimates(3),currentEstimates(4),currentEstimates(5),currentEstimates(6))))
 
@@ -469,29 +491,29 @@ for (thisSample in 1:nSamples){
             }
 
             # Recover individual efficacy estimates.
-            p1 <- bestEstimates(1)
-            p2 <- bestEstimates(4)
-            bestEstimates(1) <- p1*(1-p2)
-            bestEstimates(4) <- p1*p2
+            p1 <- bestEstimates[1]
+            p2 <- bestEstimates[4]
+            bestEstimates[1] <- p1*(1-p2)
+            bestEstimates[4] <- p1*p2
 
             # Recover confidence intervals on the estimates.
-            p1 <- bestEstimateCIs(:,1)
-            p2 <- bestEstimateCIs(:,4)
-            bestEstimateCIs(:,1) <- p1.*(1-p2)
-            bestEstimateCIs(:,4) <- p1.*p2
+            p1 <- bestEstimateCIs[,1]
+            p2 <- bestEstimateCIs[,4]
+            bestEstimateCIs[:,1] <- p1*(1-p2)
+            bestEstimateCIs[:,4] <- p1*p2
 
             # Check whether a switch in the order of parameters is
             # required.
-            if (bestEstimates(2) < bestEstimates(5)){
-                bestEstimates <- bestEstimates([4 5 6 1 2 3])
-                bestEstimateCIs <- bestEstimateCIs(,[4 5 6 1 2 3])
-                fprintf('(T2 swap) ')
+            if (bestEstimates[2] < bestEstimates[5]){
+                bestEstimates <- bestEstimates[c(4,5,6,1,2,3)]
+                bestEstimateCIs <- bestEstimateCIs[,c(4,5,6,1,2,3)]
+                cat('(T2 swap) ')
             }
 
             # Enter the best estimates into the parameter matrices.
             allT2Estimates_byParticipant[thisParticipant,thisLag,] <- bestEstimates
-            allT2LowerBounds_byParticipant[thisParticipant,thisLag,] <- bestEstimateCIs(1,)
-            allT2UpperBounds_byParticipant[thisParticipant,thisLag,] <- bestEstimateCIs(2,)
+            allT2LowerBounds_byParticipant[thisParticipant,thisLag,] <- bestEstimateCIs[1,]
+            allT2UpperBounds_byParticipant[thisParticipant,thisLag,] <- bestEstimateCIs[2,]
             allT2MinNegLogLikelihoods_byParticipant[thisParticipant,thisLag] <- minNegLogLikelihood
 
             # Plot the distributions if required.
@@ -501,9 +523,9 @@ for (thisSample in 1:nSamples){
                 tBars <- tBars/sum(tBars)
                 bar(xDomain,tBars)
                 hold on
-                p1 <- bestEstimates(1) + bestEstimates(4)
-                p2 <- bestEstimates(4)/p1
-                yModelPlot <- pdf_normmixture(xDomain, p1, bestEstimates(2), bestEstimates(3), p2, bestEstimates(5), bestEstimates(6))
+                p1 <- bestEstimates[1] + bestEstimates[4]
+                p2 <- bestEstimates[4]/p1
+                yModelPlot <- pdf_normmixture(xDomain, p1, bestEstimates[2], bestEstimates[3], p2, bestEstimates[5], bestEstimates[6])
                 plot(xDomain,yModelPlot,'r--')
                 axis square
                 axis([minErr-1 maxErr+1 0 0.75])
@@ -534,10 +556,10 @@ for (thisSample in 1:nSamples){
             # Generate the 'pseudo-uniform' distribution, which is the
             # expected distribution of errors if a random guess was
             # provided on every trial.
-            pseudo_uniform in zeros(size(xDomain))){){
+            pseudo_uniform  <- rep(0, length(xDomain))
 
             # Cycle through each possible T1 and T2 position.
-            for (thisPosNo in 1:numel(theseT1T2Pos)){
+            for (thisPosNo in 1:length(theseT1T2Pos)){
 
                 # Identify the actual T1 or T2 position corresponding to the
                 # position number. For example, the first position number
@@ -557,12 +579,12 @@ for (thisSample in 1:nSamples){
             for (thisReplicate in 1:nReplicates){
 
                 # Randomise starting values for each parameter.
-                p1Guess <- rand
-                mu1Guess <- (2*muBound*rand)-muBound
-                sigma1Guess <- sigmaBound*rand
-                p2Guess <- rand
-                mu2Guess <- -listLags[thisLag]+(2*muBound*rand)-muBound
-                sigma2Guess <- sigmaBound*rand
+                p1Guess <- runif(1)
+                mu1Guess <- (2*muBound*runif(1))-muBound
+                sigma1Guess <- sigmaBound*runif(1)
+                p2Guess <- runif(1)
+                mu2Guess <- -listLags[thisLag]+(2*muBound*runif(1))-muBound
+                sigma2Guess <- sigmaBound*runif(1)
 
                 # Ensure guesses satisfy bounds, and round them marginally
                 # up or down if necessary.
@@ -597,23 +619,23 @@ for (thisSample in 1:nSamples){
             }
 
             # Recover individual efficacy estimates.
-            p1 <- bestEstimates(1)
-            p2 <- bestEstimates(4)
-            bestEstimates(1) <- p1*(1-p2)
-            bestEstimates(4) <- p1*p2
+            p1 <- bestEstimates[1]
+            p2 <- bestEstimates[4]
+            bestEstimates[1] <- p1*(1-p2)
+            bestEstimates[4] <- p1*p2
 
             # Recover confidence intervals on the estimates.
-            p1 <- bestEstimateCIs(:,1)
-            p2 <- bestEstimateCIs(:,4)
-            bestEstimateCIs(:,1) <- p1.*(1-p2)
-            bestEstimateCIs(:,4) <- p1.*p2
+            p1 <- bestEstimateCIs[,1]
+            p2 <- bestEstimateCIs[,4]
+            bestEstimateCIs[,1] <- p1*(1-p2)
+            bestEstimateCIs[,4] <- p1*p2
 
             # Check whether a switch in the order of parameters is
             # required.
-            if (bestEstimates(2) < bestEstimates(5)){
-                bestEstimates <- bestEstimates([4 5 6 1 2 3])
-                bestEstimateCIs <- bestEstimateCIs(:,[4 5 6 1 2 3])
-                fprintf('(T1+T2 swap) ')
+            if (bestEstimates[2] < bestEstimates[5]){
+                bestEstimates <- bestEstimates[c(4,5,6,1,2,3)]
+                bestEstimateCIs <- bestEstimateCIs[:,c(4,5,6,1,2,3)]
+                cat('(T1+T2 swap) ')
             }
 
             # Enter the best estimates into the parameter matrices.
