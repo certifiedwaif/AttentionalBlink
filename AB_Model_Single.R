@@ -54,6 +54,7 @@ sigmaBound <- 4
 # Ordinarily you wouldn't want to change these, but you might want to
 # provide a different function with a different number of parameters.
 nFreeParameters <- 3
+source("pdf_Mixture_Single.R")
 pdf_normmixture_single <- pdf_Mixture_Single
 
 # Just for diagnostics. Setting this to 1 will show the fitted
@@ -85,7 +86,7 @@ nSamples <- length(sampleNames)
 for (thisSample in 1:nSamples) {
 
     # Load the compiled data file for this sample.
-    data <- readMat(str_c('CompiledData_', sampleNames[thisSample], '.mat'))
+    data <- readMat(str_c('data/CompiledData_', sampleNames[thisSample], '.mat'))
     allLags <- data$allLags
     allT1Error <- data$allT1Error
     allT1Pos <- data$allT1Pos
@@ -149,7 +150,7 @@ for (thisSample in 1:nSamples) {
     # options <- statset('MaxIter', fitMaxIter, 'MaxFunEvals', fitMaxFunEvals, 'Display', 'off')
 
     # Cycle through each participant.
-    for (thisParticipant in 1:nParticipants){
+    for (thisParticipant in 1:nParticipants) {
 
         # Keep track of progress in the command window.
         print(sprintf('\nParticipant %d... ', thisParticipant))
@@ -297,14 +298,13 @@ for (thisSample in 1:nSamples) {
                 # Add to the pseudo-uniform distribution one unit for every
                 # possible error given that T1 position.
                 pseudo_uniform[(1-thisPos-minErr+1):(nLetters-thisPos-minErr+1)] = pseudo_uniform[(1-thisPos-minErr+1):(nLetters-thisPos-minErr+1)]+rep(1,nLetters)
-
             }
 
             # Cycle through a number of replicates of the fitting
             # procedure with different randomised starting values across
             # the range dictated by the bounds.
 
-            for (thisReplicate in 1:nReplicates){
+            for (thisReplicate in 1:nReplicates) {
 
                 # Randomise starting values for each parameter.
                 pGuess <- max(c(smallNonZeroNumber, runif(1)))
@@ -320,10 +320,10 @@ for (thisSample in 1:nSamples) {
                 # up or down if necessary.
                 for (i in 1:length(parameterGuess)) {
                     if (parameterGuess[i] < parameterLowerBound[i])
-                        parameterGuess[i] <- paramaterLowerBound[i]
+                        parameterGuess[i] <- parameterLowerBound[i]
 
                     if (parameterGuess[i] > parameterUpperBound[i])
-                        parameterGuess[i] <- paramaterUpperBound[i]
+                        parameterGuess[i] <- parameterUpperBound[i]
                 }
 
                 # Run the MLE function.
@@ -333,11 +333,13 @@ for (thisSample in 1:nSamples) {
                     p <- par[1]
                     mu <- par[2]
                     sigma <- par[3]
-                    result <- -pdf_normmixture_single(theseT1Error, p, mu, sigma)
+                    result <- pdf_normmixture_single(theseT1Error, p, mu, sigma)
                     cat("p ", p, " mu ", mu, " sigma ", sigma, " result ", result, "\n")
-                    return(exp(sum(log(result))))
+                    return(-exp(sum(log(result))))
                 }                
+                cat("parameterGuess", parameterGuess, "\n")
                 fit <- optim(parameterGuess, pdf_normmixture_single_par, lower=parameterLowerBound, upper=parameterUpperBound, control=list(trace=6), method="L-BFGS-B")
+                currentEstimates <- fit$par
 
                 # Compute the negative log likelihood of the fitted model.
                 thisNegLogLikelihood <- -sum(log(pdf_normmixture_single(theseT1Error,currentEstimates[1],currentEstimates[2],currentEstimates[3])))
@@ -348,39 +350,39 @@ for (thisSample in 1:nSamples) {
                     # If so, store this as the current best estimate.
                     minNegLogLikelihood <- thisNegLogLikelihood
                     bestEstimates <- currentEstimates
-                    bestEstimateCIs <- currentCIs
+                    # bestEstimateCIs <- currentCIs
 
                 }
 
             }
 
             # Enter the best estimates into the parameter matrices.
-            allT1Estimates_byParticipant[thisParticipant,thisLag,:] <- bestEstimates
-            allT1LowerBounds_byParticipant[thisParticipant,thisLag,:] <- bestEstimateCIs[1,:]
-            allT1UpperBounds_byParticipant[thisParticipant,thisLag,:] <- bestEstimateCIs[2,:]
+            allT1Estimates_byParticipant[thisParticipant,thisLag,] <- bestEstimates
+            # allT1LowerBounds_byParticipant[thisParticipant,thisLag,] <- bestEstimateCIs[1,]
+            # allT1UpperBounds_byParticipant[thisParticipant,thisLag,] <- bestEstimateCIs[2,]
             allT1MinNegLogLikelihoods_byParticipant[thisParticipant,thisLag] <- minNegLogLikelihood
 
             # Plot the distributions if required.
-            if (plotFits){
-                pFig <- figure('Color','white','Name',['Participant ' num2str(thisParticipant) ', Lag ' num2str(thisLag)])##ok<UNRCH>
-                subplot(1,3,1)
-                tBars <- hist(theseT1Error, xDomain)
-                tBars <- tBars/sum(tBars)
-                bar(xDomain,tBars)
-                hold on
-                yModelPlot <- pdf_normmixture_single(xDomain, bestEstimates(1), bestEstimates(2), bestEstimates(3))
-                plot(xDomain,yModelPlot,'r--')
-                axis square
-                axis([minErr-1 maxErr+1 0 0.75])
-                title('T1')
-                drawnow
-            }
+            # if (plotFits){
+            #     pFig <- figure('Color','white','Name',['Participant ' num2str(thisParticipant) ', Lag ' num2str(thisLag)])##ok<UNRCH>
+            #     subplot(1,3,1)
+            #     tBars <- hist(theseT1Error, xDomain)
+            #     tBars <- tBars/sum(tBars)
+            #     bar(xDomain,tBars)
+            #     hold on
+            #     yModelPlot <- pdf_normmixture_single(xDomain, bestEstimates(1), bestEstimates(2), bestEstimates(3))
+            #     plot(xDomain,yModelPlot,'r--')
+            #     axis square
+            #     axis([minErr-1 maxErr+1 0 0.75])
+            #     title('T1')
+            #     drawnow
+            # }
 
             # Fit the model to the T2 distribution.
 
             # Keep track of the minimum negative log likelihood on each
             # replicate.
-            minNegLogLikelihood <- inf
+            minNegLogLikelihood <- Inf
 
             # Calculate the domain of possible errors (xDomain).
             xPosition <- unique(theseT2Pos)
@@ -436,14 +438,15 @@ for (thisSample in 1:nSamples) {
                     p <- par[1]
                     mu <- par[2]
                     sigma <- par[3]
-                    result <- -pdf_normmixture_single(theseT1Error, p, mu, sigma)
+                    result <- pdf_normmixture_single(theseT1Error, p, mu, sigma)
                     cat("p ", p, " mu ", mu, " sigma ", sigma, " result ", result, "\n")
-                    return(exp(sum(log(result))))
+                    return(-exp(sum(log(result))))
                 }                
                 fit <- optim(parameterGuess, pdf_normmixture_single_par, lower=parameterLowerBound, upper=parameterUpperBound, control=list(trace=6), method="L-BFGS-B")
+                currentEstimates <- fit$par
 
                 # Compute the negative log likelihood of the fitted model.
-                thisNegLogLikelihood <- -sum(log(pdf_normmixture_single(theseT2Error,currentEstimates(1),currentEstimates(2),currentEstimates(3))))
+                thisNegLogLikelihood <- sum(log(pdf_normmixture_single(theseT2Error,currentEstimates[1],currentEstimates[2],currentEstimates[3])))
 
                 # Check whether this is lower than the lowest so far.
                 if (minNegLogLikelihood > thisNegLogLikelihood){
@@ -451,32 +454,32 @@ for (thisSample in 1:nSamples) {
                     # If so, store this as the current best estimate.
                     minNegLogLikelihood <- thisNegLogLikelihood
                     bestEstimates <- currentEstimates
-                    bestEstimateCIs <- currentCIs
+                    # bestEstimateCIs <- currentCIs
 
                 }
 
             }
 
             # Enter the best estimates into the parameter matrices.
-            allT2Estimates_byParticipant[thisParticipant,thisLag,:] <- bestEstimates
-            allT2LowerBounds_byParticipant[thisParticipant,thisLag,:] <- bestEstimateCIs[1,:]
-            allT2UpperBounds_byParticipant[thisParticipant,thisLag,:] <- bestEstimateCIs[2,:]
-            allT2MinNegLogLikelihoods_byParticipant[thisParticipant,thisLag) <- minNegLogLikelihood
+            allT2Estimates_byParticipant[thisParticipant,thisLag,] <- bestEstimates
+            # allT2LowerBounds_byParticipant[thisParticipant,thisLag,] <- bestEstimateCIs[1,]
+            # allT2UpperBounds_byParticipant[thisParticipant,thisLag,] <- bestEstimateCIs[2,]
+            allT2MinNegLogLikelihoods_byParticipant[thisParticipant,thisLag] <- minNegLogLikelihood
 
             # Plot the distributions if required.
-            if (plotFits){
-                subplot(1,3,2)##ok<UNRCH>
-                tBars <- hist(theseT2Error, xDomain)
-                tBars <- tBars/sum(tBars)
-                bar(xDomain,tBars)
-                hold on
-                yModelPlot <- pdf_normmixture_single(xDomain, bestEstimates(1), bestEstimates(2), bestEstimates(3))
-                plot(xDomain,yModelPlot,'r--')
-                axis square
-                axis([minErr-1 maxErr+1 0 0.75])
-                title('T2')
-                drawnow
-            }
+            # if (plotFits){
+            #     subplot(1,3,2)##ok<UNRCH>
+            #     tBars <- hist(theseT2Error, xDomain)
+            #     tBars <- tBars/sum(tBars)
+            #     bar(xDomain,tBars)
+            #     hold on
+            #     yModelPlot <- pdf_normmixture_single(xDomain, bestEstimates(1), bestEstimates(2), bestEstimates(3))
+            #     plot(xDomain,yModelPlot,'r--')
+            #     axis square
+            #     axis([minErr-1 maxErr+1 0 0.75])
+            #     title('T2')
+            #     drawnow
+            # }
 
 
             # Fit the model to the combined T1 + T2 distribution. First,
@@ -485,7 +488,7 @@ for (thisSample in 1:nSamples) {
 
             # Keep track of the minimum negative log likelihood on each
             # replicate.
-            minNegLogLikelihood <- inf
+            minNegLogLikelihood <- Inf
 
             # Calculate the domain of possible errors (xDomain).
             theseT1T2Pos <- theseT2Pos# Errors are relative to T2
@@ -522,9 +525,9 @@ for (thisSample in 1:nSamples) {
             for (thisReplicate in 1:nReplicates){
 
                 # Randomise starting values for each parameter.
-                pGuess <- max(c(smallNonZeroNumber, rand))
-                muGuess <- (2*muBound*rand)-muBound
-                sigmaGuess <- sigmaBound*rand+smallNonZeroNumber
+                pGuess <- max(c(smallNonZeroNumber, runif(1)))
+                muGuess <- (2*muBound*runif(1))-muBound
+                sigmaGuess <- sigmaBound*runif(1)+smallNonZeroNumber
 
                 # Compile to feed into the MLE function.
                 parameterGuess <- c(pGuess, muGuess, sigmaGuess)
@@ -542,14 +545,15 @@ for (thisSample in 1:nSamples) {
                     p <- par[1]
                     mu <- par[2]
                     sigma <- par[3]
-                    result <- -pdf_normmixture_single(theseT1Error, p, mu, sigma)
+                    result <- pdf_normmixture_single(theseT1Error, p, mu, sigma)
                     cat("p ", p, " mu ", mu, " sigma ", sigma, " result ", result, "\n")
-                    return(exp(sum(log(result))))
+                    return(-exp(sum(log(result))))
                 }                
                 fit <- optim(parameterGuess, pdf_normmixture_single_par, lower=parameterLowerBound, upper=parameterUpperBound, control=list(trace=6), method="L-BFGS-B")
+                currentEstimates <- fit$par
 
                 # Compute the negative log likelihood of the fitted model.
-                thisNegLogLikelihood <- -sum(log(pdf_normmixture_single(theseT1T2Error,currentEstimates(1),currentEstimates(2),currentEstimates(3))))
+                thisNegLogLikelihood <- -sum(log(pdf_normmixture_single(theseT1T2Error,currentEstimates[1],currentEstimates[2],currentEstimates[3])))
 
                 # Check whether this is lower than the lowest so far.
                 if (minNegLogLikelihood > thisNegLogLikelihood){
@@ -557,7 +561,7 @@ for (thisSample in 1:nSamples) {
                     # If so, store this as the current best estimate.
                     minNegLogLikelihood <- thisNegLogLikelihood
                     bestEstimates <- currentEstimates
-                    bestEstimateCIs <- currentCIs
+                    # bestEstimateCIs <- currentCIs
 
                 }
 
@@ -565,24 +569,24 @@ for (thisSample in 1:nSamples) {
 
             # Enter the best estimates into the parameter matrices.
             allT1T2Estimates_byParticipant[thisParticipant,thisLag,] <- bestEstimates
-            allT1T2LowerBounds_byParticipant[thisParticipant,thisLag,] <- bestEstimateCIs[1,]
-            allT1T2UpperBounds_byParticipant[thisParticipant,thisLag,] <- bestEstimateCIs[2,]
+            # allT1T2LowerBounds_byParticipant[thisParticipant,thisLag,] <- bestEstimateCIs[1,]
+            # allT1T2UpperBounds_byParticipant[thisParticipant,thisLag,] <- bestEstimateCIs[2,]
             allT1T2MinNegLogLikelihoods_byParticipant[thisParticipant,thisLag] <- minNegLogLikelihood
 
             # Plot the distributions if required.
-            if (plotFits){
-                subplot(1,3,3)##ok<UNRCH>
-                tBars <- hist(theseT1T2Error, xDomain)
-                tBars <- tBars/sum(tBars)
-                bar(xDomain,tBars)
-                hold on
-                yModelPlot <- pdf_normmixture_single(xDomain, bestEstimates(1), bestEstimates(2), bestEstimates(3))
-                plot(xDomain,yModelPlot,'r--')
-                axis square
-                axis([minErr-1 maxErr+1 0 0.75])
-                title('T1+T2')
-                drawnow
-            }
+            # if (plotFits){
+            #     subplot(1,3,3)##ok<UNRCH>
+            #     tBars <- hist(theseT1T2Error, xDomain)
+            #     tBars <- tBars/sum(tBars)
+            #     bar(xDomain,tBars)
+            #     hold on
+            #     yModelPlot <- pdf_normmixture_single(xDomain, bestEstimates[1], bestEstimates[2], bestEstimates[3])
+            #     plot(xDomain,yModelPlot,'r--')
+            #     axis square
+            #     axis([minErr-1 maxErr+1 0 0.75])
+            #     title('T1+T2')
+            #     drawnow
+            # }
 
         }
 
@@ -592,10 +596,10 @@ for (thisSample in 1:nSamples) {
     cat('\n\n')
 
     # Change directory to store model output.
-    cd([thisPath 'ModelOutput'])
+    # cd([thisPath 'ModelOutput'])
 
     # Save model output.
-    save(['ModelOutput_' sampleNames{thisSample} '_Single.mat'])
+    # save(['ModelOutput_' sampleNames{thisSample} '_Single.mat'])
 
 }
 
