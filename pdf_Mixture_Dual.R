@@ -1,10 +1,19 @@
+source("pdf_Mixture_Single.R")
 pdf_Mixture_Dual <- function(x,p1,mu1,sigma1,p2,mu2,sigma2){
+    cat("x", x, " p1 ", p1, " mu1 ", mu1, " sigma1 ",  sigma1, " p2 ", p2, " mu2 ", mu2, " sigma2 ", sigma2, "\n")  
     pseudo_normal1 <- dnorm(xDomain,mu1,sigma1)*pseudo_uniform
+    cat("pseudo_normal1 ", pseudo_normal1, "\n")
     pseudo_normal2 <- dnorm(xDomain,mu2,sigma2)*pseudo_uniform
+    cat("pseudo_normal1 ", pseudo_normal1, "\n")
+    if (any(is.nan(pseudo_normal1)) || any(is.nan(pseudo_normal2)))
+        return(0)
 
     normFactor_uniform <- sum(pseudo_uniform)
+    cat("normFactor_uniform ", normFactor_uniform, "\n")  
     normFactor_normal1 <- sum(pseudo_normal1)
+    cat("normFactor_normal1 ", normFactor_normal1, "\n")  
     normFactor_normal2 <- sum(pseudo_normal2)
+    cat("normFactor_normal2 ", normFactor_normal2, "\n")  
 
     if (normFactor_uniform  ==  0) {
         normFactor_uniform = 10^-8
@@ -39,6 +48,9 @@ pdf_Mixture_Dual <- function(x,p1,mu1,sigma1,p2,mu2,sigma2){
     } else {
         tempResult <- normResult1+normResult2+t(uniResult)
     }
+    cat("tempResult ", tempResult, "\n")
+    if (any(is.na(tempResult)))
+        return(0)
 
     return(tempResult)
 }
