@@ -639,7 +639,7 @@ for (thisSample in 1:nSamples) {
                 currentEstimates <- fit$par
 
                 # Compute the negative log likelihood of the fitted model.
-                thisNegLogLikelihood <- -sum(log(pdf_normmixture(theseT1T2Error,currentEstimates[1],currentEstimates[2],currentEstimates[3],currentEstimates[4],currentEstimates[5],currentEstimates[6])))
+                thisNegLogLikelihood <- sum(log(pdf_normmixture(theseT1T2Error,currentEstimates[1],currentEstimates[2],currentEstimates[3],currentEstimates[4],currentEstimates[5],currentEstimates[6])))
 
                 # Check whether this is lower than the lowest so far.
                 if (minNegLogLikelihood > thisNegLogLikelihood){
