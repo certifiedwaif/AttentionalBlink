@@ -345,7 +345,7 @@ for (thisSample in 1:nSamples) {
                   sigma2 <- par[6]
                   result <- pdf_Mixture_Dual(theseT1Error, p1, mu1, sigma1, p2, mu2, sigma2)
                   cat("result ", result, "\n")
-                  return(-sum(result))
+                  return(-sum(log(result)))
                 }                
                 fit <- optim(parameterGuess, pdf_normmixture_double_par,
                              lower=parameterLowerBound, upper=parameterUpperBound,
@@ -492,7 +492,7 @@ for (thisSample in 1:nSamples) {
                   mu2 <- par[5]
                   sigma2 <- par[6]
                   result <- pdf_Mixture_Dual(theseT1Error, p1, mu1, sigma1, p2, mu2, sigma2)
-                  return(-sum(result))
+                  return(-sum(log(result)))
                 }                
                 fit <- optim(parameterGuess, pdf_normmixture_double_par, lower=parameterLowerBound, upper=parameterUpperBound, control=list(trace=0), method="L-BFGS-B")
                 currentEstimates <- fit$par
@@ -633,7 +633,7 @@ for (thisSample in 1:nSamples) {
                   mu2 <- par[5]
                   sigma2 <- par[6]
                   result <- pdf_Mixture_Dual(theseT1Error, p1, mu1, sigma1, p2, mu2, sigma2)
-                  return(-sum(result))
+                  return(-sum(log(result)))
                 }                
                 fit <- optim(parameterGuess, pdf_normmixture_double_par, lower=parameterLowerBound, upper=parameterUpperBound, control=list(trace=6), method="L-BFGS-B")
                 currentEstimates <- fit$par
