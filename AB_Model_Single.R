@@ -294,41 +294,53 @@ for (thisSample in 1:samplesToFit) {
             # the range dictated by the bounds.
             nReplicatesToFit<- ifelse(debugDoJustOneFit,1,nReplicates)
             for (thisReplicate in 1:nReplicatesToFit) {
-
-                # Randomise starting values for each parameter.
-                pGuess <- max(c(smallNonZeroNumber, runif(1)))
-                muGuess <- (2*muBound*runif(1))-muBound
-                sigmaGuess <- sigmaBound*runif(1)+smallNonZeroNumber
-
-                # Compile to feed into the MLE function.
-                parameterGuess <- c(pGuess, muGuess, sigmaGuess)
                 parameterLowerBound <- c(smallNonZeroNumber, mu_lb_T1, sigma_lb_T1)
                 parameterUpperBound <- c(1, mu_ub_T1, sigma_ub_T1)
 
-                # Ensure guesses satisfy bounds, and round them marginally
-                # up or down if necessary.
-                for (i in 1:length(parameterGuess)) {
-                    if (parameterGuess[i] < parameterLowerBound[i])
-                        parameterGuess[i] <- parameterLowerBound[i]
+                guessParameters <- function(mu_lb_T1, mu_ub_T1, sigma_lb_T1, sigma_ub_T1, muBound, sigmaBound)
+                {
+                    # Randomise starting values for each parameter.
+                    pGuess <- max(c(smallNonZeroNumber, runif(1)))
+                    muGuess <- (2*muBound*runif(1))-muBound
+                    sigmaGuess <- sigmaBound*runif(1)+smallNonZeroNumber
 
-                    if (parameterGuess[i] > parameterUpperBound[i])
-                        parameterGuess[i] <- parameterUpperBound[i]
+                    # Compile to feed into the MLE function.
+                    parameterGuess <- c(pGuess, muGuess, sigmaGuess)
+
+                    # Ensure guesses satisfy bounds, and round them marginally
+                    # up or down if necessary.
+                    for (i in 1:length(parameterGuess)) {
+                        if (parameterGuess[i] < parameterLowerBound[i])
+                            parameterGuess[i] <- parameterLowerBound[i]
+
+                        if (parameterGuess[i] > parameterUpperBound[i])
+                            parameterGuess[i] <- parameterUpperBound[i]
+                    }
+                    return(parameterGuess)
                 }
+                parameterGuess <- guessParameters(mu_lb_T1, mu_ub_T1, sigma_lb_T1, sigma_ub_T1, muBound, sigmaBound)
 
                 # Run the MLE function.
                 # [currentEstimates, currentCIs] <- mle(theseT1Error, 'pdf', pdf_normmixture_single, 'start', parameterGuess, 'lower', parameterLowerBound, 'upper', parameterUpperBound, 'options', options)
-                pdf_normmixture_single_par <- function(par)
+                fitModel <- function(theseT1Error, parameterGuess)
                 {
-                    p <- par[1]
-                    mu <- par[2]
-                    sigma <- par[3]
-                    result <- pdf_normmixture_single(theseT1Error, p, mu, sigma)
-                    #cat("p ", p, " mu ", mu, " sigma ", sigma, " result ", result, "\n")
-                    return(-exp(sum(log(result))))
-                }                
+                    pdf_normmixture_single_par <- function(par)
+                    {
+                        p <- par[1]
+                        mu <- par[2]
+                        sigma <- par[3]
+                        result <- pdf_normmixture_single(theseT1Error, p, mu, sigma)
+                        f <- (-sum(log(result)))
+                        if (if.infinite(f)) {
+                            return(1e-8)
+                        }
+                    }                
+                    fit <- optim(parameterGuess, pdf_normmixture_single_par, lower=parameterLowerBound, upper=parameterUpperBound, control=list(trace=6), method="L-BFGS-B")
+                    return(fit$par)                    
+                }
                 cat("parameterGuess", parameterGuess, "\n")
-                fit <- optim(parameterGuess, pdf_normmixture_single_par, lower=parameterLowerBound, upper=parameterUpperBound, control=list(trace=6), method="L-BFGS-B")
-                currentEstimates <- fit$par
+                browser()
+                currentEstimates <- fitModel(theseT1Error, parameterGuess)
                 cat("currentEstimates=", currentEstimates, "\n")
                 # Compute the negative log likelihood of the fitted model.
                 thisNegLogLikelihood <- -sum(log(pdf_normmixture_single(theseT1Error,currentEstimates[1],currentEstimates[2],currentEstimates[3])))
@@ -350,7 +362,7 @@ for (thisSample in 1:samplesToFit) {
             # allT1LowerBounds_byParticipant[thisParticipant,thisLag,] <- bestEstimateCIs[1,]
             # allT1UpperBounds_byParticipant[thisParticipant,thisLag,] <- bestEstimateCIs[2,]
             allT1MinNegLogLikelihoods_byParticipant[thisParticipant,thisLag] <- minNegLogLikelihood
-            STOP
+            #STOP
             # Plot the distributions if required.
             # if (plotFits){
             #     pFig <- figure('Color','white','Name',['Participant ' num2str(thisParticipant) ', Lag ' num2str(thisLag)])##ok<UNRCH>
@@ -407,32 +419,10 @@ for (thisSample in 1:samplesToFit) {
             for (thisReplicate in 1:nReplicates){
 
                 # Randomise starting values for each parameter.
-                pGuess <- max(c(smallNonZeroNumber, runif(1)))
-                muGuess <- (2*muBound*runif(1))-muBound
-                sigmaGuess <- sigmaBound*runif(1)+smallNonZeroNumber
-
-                # Compile to feed into the MLE function.
-                parameterGuess <- c(pGuess, muGuess, sigmaGuess)
-                parameterLowerBound <- c(smallNonZeroNumber, mu_lb_T2, sigma_lb_T2)
-                parameterUpperBound <- c(1, mu_ub_T2, sigma_ub_T2)
-
-                # Ensure guesses satisfy bounds.
-                parameterGuess <- max(parameterGuess,parameterLowerBound)
-                parameterGuess <- min(parameterGuess,parameterUpperBound)
-
-                # Run the MLE function.
-                # [currentEstimates, currentCIs] <- mle(theseT2Error, 'pdf', pdf_normmixture_single, 'start', parameterGuess, 'lower', parameterLowerBound, 'upper', parameterUpperBound, 'options', options)
-                pdf_normmixture_single_par <- function(par)
-                {
-                    p <- par[1]
-                    mu <- par[2]
-                    sigma <- par[3]
-                    result <- pdf_normmixture_single(theseT1Error, p, mu, sigma)
-                    cat("p ", p, " mu ", mu, " sigma ", sigma, " result ", result, "\n")
-                    return(-exp(sum(log(result))))
-                }                
-                fit <- optim(parameterGuess, pdf_normmixture_single_par, lower=parameterLowerBound, upper=parameterUpperBound, control=list(trace=6), method="L-BFGS-B")
-                currentEstimates <- fit$par
+                parameterGuess <- guessParameters(mu_lb_T1, mu_ub_T1, sigma_lb_T1, sigma_ub_T1, muBound, sigmaBound)
+                cat("parameterGuess ", parameterGuess, "\n")
+                browser()
+                currentEstimates <- fitModel(theseT1Error, parameterGuess)
 
                 # Compute the negative log likelihood of the fitted model.
                 thisNegLogLikelihood <- sum(log(pdf_normmixture_single(theseT2Error,currentEstimates[1],currentEstimates[2],currentEstimates[3])))
@@ -512,34 +502,12 @@ for (thisSample in 1:samplesToFit) {
             # the range dictated by the bounds.
 
             for (thisReplicate in 1:nReplicates){
-
-                # Randomise starting values for each parameter.
-                pGuess <- max(c(smallNonZeroNumber, runif(1)))
-                muGuess <- (2*muBound*runif(1))-muBound
-                sigmaGuess <- sigmaBound*runif(1)+smallNonZeroNumber
-
-                # Compile to feed into the MLE function.
-                parameterGuess <- c(pGuess, muGuess, sigmaGuess)
-                parameterLowerBound <- c(smallNonZeroNumber, mu_lb_T1T2, sigma_lb_T1T2)
-                parameterUpperBound <- c(1, mu_ub_T1T2, sigma_ub_T1T2)
-
-                # Ensure guesses satisfy bounds.
-                parameterGuess <- max(c(parameterGuess,parameterLowerBound))
-                parameterGuess <- min(c(parameterGuess,parameterUpperBound))
+                parameterGuess <- guessParameters(mu_lb_T1, mu_ub_T1, sigma_lb_T1, sigma_ub_T1, muBound, sigmaBound)
+                browser()
 
                 # Run the MLE function.
                 # [currentEstimates, currentCIs] <- mle(theseT1T2Error, 'pdf', pdf_normmixture_single, 'start', parameterGuess, 'lower', parameterLowerBound, 'upper', parameterUpperBound, 'options', options)
-                pdf_normmixture_single_par <- function(par)
-                {
-                    p <- par[1]
-                    mu <- par[2]
-                    sigma <- par[3]
-                    result <- pdf_normmixture_single(theseT1Error, p, mu, sigma)
-                    cat("p ", p, " mu ", mu, " sigma ", sigma, " result ", result, "\n")
-                    return(-exp(sum(log(result))))
-                }                
-                fit <- optim(parameterGuess, pdf_normmixture_single_par, lower=parameterLowerBound, upper=parameterUpperBound, control=list(trace=6), method="L-BFGS-B")
-                currentEstimates <- fit$par
+                currentEstimates <- fitModel(theseT1Error, parameterGuess)
 
                 # Compute the negative log likelihood of the fitted model.
                 thisNegLogLikelihood <- -sum(log(pdf_normmixture_single(theseT1T2Error,currentEstimates[1],currentEstimates[2],currentEstimates[3])))
