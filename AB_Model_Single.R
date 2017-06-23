@@ -3,6 +3,9 @@ library(stringr)
 
 # This script fits a single-episode model (M1) to error data from
 # an attentional blink task.
+# There are two targets and the participant clicks on which letters she thinks were presented.
+# The responses are aggregated together into a single serial position error histogram,
+# which will be fit with the mixture of the pseudouniform and the Gaussian.
 #
 # You should have a folder named 'ModelOutput', where the model output will
 # be saved. It will overwrite any saved output with the same name
@@ -17,8 +20,6 @@ library(stringr)
 # AB_Compare_Models to put everything together and get your final parameter
 # estimates.
 #
-# The script requires the Statistics Toolbox.
-
 # -------------------------------------------------------------------------
 # -------------------------------------------------------------------------
 # This section contains some things that will need to be set locally,
@@ -30,6 +31,8 @@ thisPath <- '/home/markg/Dropbox/AttentionalBlink/data'
 # Provide a name for each sample,
 # so files can be read and written with corresponding filenames.
 sampleNames <- c("Warwick","MIT","Western","Berkeley","SydneyObject","SydneyWord")
+
+debugDoJustOneFit<-TRUE #For debugging purposes, only fit a single set of observations
 
 # Provide some properties of the data for each sample, in order
 allNParticipants <- c(20, 11, 12, 12, 32, 31)# Number of participants
@@ -43,13 +46,12 @@ smallNonZeroNumber <- 10^-5# Useful number for when limits can't be exactly zero
 fitMaxIter <- 10^4# Maximum number of fit iterations
 fitMaxFunEvals <- 10^4# Maximum number of model evaluations
 
-# Set some parameter bounds. You want these large enough that they span the
-# full reasonable range of mean (latency) and SD (precision), but small
-# enough to prevent over-fitting to blips in the distributions. These
+# Set some parameter bounds. Pat apparently found these were needed to 
+# prevent over-fitting to blips in the distributions. These
 # values are about right in most cases, but might need some tweaking if
 # e.g. you were analysing data with an unusually high or low item rate.
-muBound <- 4
-sigmaBound <- 4
+muBound <- 4   #will only consider -4 to +4 for mu 
+sigmaBound <- 4 #will only consider 0 to 4 for sigma
 
 # Ordinarily you wouldn't want to change these, but you might want to
 # provide a different function with a different number of parameters.
@@ -63,27 +65,15 @@ pdf_normmixture_single <- pdf_Mixture_Single
 plotFits <- 0
 
 # -------------------------------------------------------------------------
-# -------------------------------------------------------------------------
-
 # Declare global variables that need to be accessed by the objective
 # function.
-#global xDomain
-#global pseudo_uniform
-
-# Add folders to the MATLAB path.
-#addpath(genpath(thisPath))
-#cd([thisPath 'Data'])
-
-# Turn off this warning to prevent it from filling the command
-# window. This is only a problem if you get it on most
-# replicates of a fit.
-#warning('off', 'stats:mlecov:NonPosDefHessian')
 
 # Determine number of samples
 nSamples <- length(sampleNames)
 
 # Cycle through each sample
-for (thisSample in 1:nSamples) {
+samplesToFit<- ifelse(debugDoJustOneFit,1,nSamples)
+for (thisSample in 1:samplesToFit) {
 
     # Load the compiled data file for this sample.
     data <- readMat(str_c('data/CompiledData_', sampleNames[thisSample], '.mat'))
@@ -146,11 +136,9 @@ for (thisSample in 1:nSamples) {
     allT1T2UpperBounds_byParticipant <- array(data=NA, dim=c(nParticipants,nLags,nFreeParameters))
     allT1T2MinNegLogLikelihoods_byParticipant <- array(data=NA, dim=c(nParticipants,nLags))
 
-    # Set fit options.
-    # options <- statset('MaxIter', fitMaxIter, 'MaxFunEvals', fitMaxFunEvals, 'Display', 'off')
-
     # Cycle through each participant.
-    for (thisParticipant in 1:nParticipants) {
+    nParticipantsToFit<- ifelse(debugDoJustOneFit,1,nParticipants)
+    for (thisParticipant in 1:nParticipantsToFit) {
 
         # Keep track of progress in the command window.
         print(sprintf('\nParticipant %d... ', thisParticipant))
@@ -164,7 +152,8 @@ for (thisSample in 1:nSamples) {
         Lags <- allLags[thisParticipant,,]
 
         # Cycle through each lag.
-        for (thisLag in 1:nLags){
+        nLagsToFit<- ifelse(debugDoJustOneFit,1,nLags)
+        for (thisLag in 1:nLagsToFit){
 
             # Keep track of progress in the command window.
             print(sprintf('L%d ', thisLag))
@@ -303,8 +292,8 @@ for (thisSample in 1:nSamples) {
             # Cycle through a number of replicates of the fitting
             # procedure with different randomised starting values across
             # the range dictated by the bounds.
-
-            for (thisReplicate in 1:nReplicates) {
+            nReplicatesToFit<- ifelse(debugDoJustOneFit,1,nReplicates)
+            for (thisReplicate in 1:nReplicatesToFit) {
 
                 # Randomise starting values for each parameter.
                 pGuess <- max(c(smallNonZeroNumber, runif(1)))
