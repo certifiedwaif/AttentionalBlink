@@ -19,17 +19,16 @@ library(signal) # Provides interp1 function
 # }
 
 pdf_Mixture_Single <- function(x,p,mu,sigma){
-    # This should never happen, but occasionally optim passes NA for mu and sigma
-    if (is.na(mu) || is.na(sigma))
-        return(0)
-
+    # cat("p ", p, " mu ",  mu, " sigma ", sigma, "\n")
+    # cat("pseudo_uniform ", pseudo_uniform, "\n")
+    # cat("dnorm(xDomain,mu,sigma)", dnorm(xDomain,mu,sigma), "\n")
     pseudo_normal <- dnorm(xDomain,mu,sigma)*pseudo_uniform
-    #cat("pseudo_normal ", pseudo_normal, "\n")
+    # cat("pseudo_normal ", pseudo_normal, "\n")
     
     normFactor_uniform <- sum(pseudo_uniform)
-    #cat("normFactor_uniform ", normFactor_uniform, "\n")  
+    # cat("normFactor_uniform ", normFactor_uniform, "\n")  
     normFactor_normal <- sum(pseudo_normal)
-    #cat("normFactor_normal ", normFactor_normal, "\n")  
+    # cat("normFactor_normal ", normFactor_normal, "\n")  
     
     if (normFactor_uniform  == 0 || is.nan(normFactor_uniform)){
         normFactor_uniform <- 10^-8
@@ -39,16 +38,16 @@ pdf_Mixture_Single <- function(x,p,mu,sigma){
         normFactor_normal <- 10^-8
     }
 
-
     uniResultTemp <- interp1(xDomain, pseudo_uniform, x)
-    #cat("uniResultTemp ", uniResultTemp, "\n")
+    uniResultTemp[is.na(uniResultTemp)] <- 0
+    # cat("uniResultTemp ", uniResultTemp, "\n")
     normResultTemp <- dnorm(x,mu,sigma)*uniResultTemp
-    #cat("normResultTemp ", normResultTemp, "\n")
+    # cat("normResultTemp ", normResultTemp, "\n")
     
     uniResultTemp <- uniResultTemp/normFactor_uniform
-    #cat("uniResultTemp ", uniResultTemp, "\n")
+    # cat("uniResultTemp ", uniResultTemp, "\n")
     normResultTemp <- normResultTemp/normFactor_normal
-    #cat("normResultTemp ", normResultTemp, "\n")
+    # cat("normResultTemp ", normResultTemp, "\n")
     
     propNorm <- p
     propUniform <- 1-p
@@ -64,7 +63,7 @@ pdf_Mixture_Single <- function(x,p,mu,sigma){
 
     #xIndex = x-min(xDomain)+1;
     #results = tempResult(xIndex);
-    #cat("tempResult ", tempResult, "\n")
+    # cat("tempResult ", tempResult, "\n")
     #tempResult <- tempResult[1]
     return(tempResult)
 }

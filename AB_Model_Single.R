@@ -32,7 +32,7 @@ thisPath <- 'data/'
 # so files can be read and written with corresponding filenames.
 sampleNames <- c("Warwick","MIT","Western","Berkeley","SydneyObject","SydneyWord")
 
-debugDoJustOneFit<-TRUE #For debugging purposes, only fit a single set of observations
+debugDoJustOneFit <- FALSE #For debugging purposes, only fit a single set of observations
 
 # Provide some properties of the data for each sample, in order
 allNParticipants <- c(20, 11, 12, 12, 32, 31)# Number of participants
@@ -318,7 +318,6 @@ for (thisSample in 1:samplesToFit) {
                     }
                     return(parameterGuess)
                 }
-                parameterGuess <- guessParameters(mu_lb_T1, mu_ub_T1, sigma_lb_T1, sigma_ub_T1, muBound, sigmaBound)
 
                 # Run the MLE function.
                 # [currentEstimates, currentCIs] <- mle(theseT1Error, 'pdf', pdf_normmixture_single, 'start', parameterGuess, 'lower', parameterLowerBound, 'upper', parameterUpperBound, 'options', options)
@@ -330,16 +329,16 @@ for (thisSample in 1:samplesToFit) {
                         mu <- par[2]
                         sigma <- par[3]
                         result <- pdf_normmixture_single(theseT1Error, p, mu, sigma)
-                        f <- (-sum(log(result)))
-                        if (if.infinite(f)) {
-                            return(1e-8)
-                        }
+                        # Sometimes pdf_normmixture_single returns 0. And the log of 0 is -Inf. So we add
+                        # 1e-8 to make the value we return finite. This allows optim() to successfully
+                        # optimise the function.
+                        return(-sum(log(result + 1e-8)))
                     }                
-                    fit <- optim(parameterGuess, pdf_normmixture_single_par, lower=parameterLowerBound, upper=parameterUpperBound, control=list(trace=6), method="L-BFGS-B")
+                    fit <- optim(parameterGuess, pdf_normmixture_single_par, lower=parameterLowerBound, upper=parameterUpperBound, control=list(trace=0), method="L-BFGS-B")
                     return(fit$par)                    
                 }
+                parameterGuess <- guessParameters(mu_lb_T1, mu_ub_T1, sigma_lb_T1, sigma_ub_T1, muBound, sigmaBound)
                 cat("parameterGuess", parameterGuess, "\n")
-                browser()
                 currentEstimates <- fitModel(theseT1Error, parameterGuess)
                 cat("currentEstimates=", currentEstimates, "\n")
                 # Compute the negative log likelihood of the fitted model.
@@ -421,8 +420,8 @@ for (thisSample in 1:samplesToFit) {
                 # Randomise starting values for each parameter.
                 parameterGuess <- guessParameters(mu_lb_T1, mu_ub_T1, sigma_lb_T1, sigma_ub_T1, muBound, sigmaBound)
                 cat("parameterGuess ", parameterGuess, "\n")
-                browser()
                 currentEstimates <- fitModel(theseT1Error, parameterGuess)
+                cat("currentEstimates ", currentEstimates, "\n")
 
                 # Compute the negative log likelihood of the fitted model.
                 thisNegLogLikelihood <- sum(log(pdf_normmixture_single(theseT2Error,currentEstimates[1],currentEstimates[2],currentEstimates[3])))
@@ -503,11 +502,11 @@ for (thisSample in 1:samplesToFit) {
 
             for (thisReplicate in 1:nReplicates){
                 parameterGuess <- guessParameters(mu_lb_T1, mu_ub_T1, sigma_lb_T1, sigma_ub_T1, muBound, sigmaBound)
-                browser()
-
+                cat("parameterGuess ", parameterGuess, "\n")
                 # Run the MLE function.
                 # [currentEstimates, currentCIs] <- mle(theseT1T2Error, 'pdf', pdf_normmixture_single, 'start', parameterGuess, 'lower', parameterLowerBound, 'upper', parameterUpperBound, 'options', options)
                 currentEstimates <- fitModel(theseT1Error, parameterGuess)
+                cat("currentEstimates ", currentEstimates, "\n")
 
                 # Compute the negative log likelihood of the fitted model.
                 thisNegLogLikelihood <- -sum(log(pdf_normmixture_single(theseT1T2Error,currentEstimates[1],currentEstimates[2],currentEstimates[3])))
