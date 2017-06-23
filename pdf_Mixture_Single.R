@@ -24,12 +24,12 @@ pdf_Mixture_Single <- function(x,p,mu,sigma){
         return(0)
 
     pseudo_normal <- dnorm(xDomain,mu,sigma)*pseudo_uniform
-    cat("pseudo_normal ", pseudo_normal, "\n")
+    #cat("pseudo_normal ", pseudo_normal, "\n")
     
     normFactor_uniform <- sum(pseudo_uniform)
-    cat("normFactor_uniform ", normFactor_uniform, "\n")  
+    #cat("normFactor_uniform ", normFactor_uniform, "\n")  
     normFactor_normal <- sum(pseudo_normal)
-    cat("normFactor_normal ", normFactor_normal, "\n")  
+    #cat("normFactor_normal ", normFactor_normal, "\n")  
     
     if (normFactor_uniform  == 0 || is.nan(normFactor_uniform)){
         normFactor_uniform <- 10^-8
