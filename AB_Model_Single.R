@@ -329,7 +329,7 @@ for (thisSample in 1:samplesToFit) {
                 cat("parameterGuess", parameterGuess, "\n")
                 fit <- optim(parameterGuess, pdf_normmixture_single_par, lower=parameterLowerBound, upper=parameterUpperBound, control=list(trace=6), method="L-BFGS-B")
                 currentEstimates <- fit$par
-                print("currentEstimates=",currentEstimates)
+                cat("currentEstimates=", currentEstimates, "\n")
                 # Compute the negative log likelihood of the fitted model.
                 thisNegLogLikelihood <- -sum(log(pdf_normmixture_single(theseT1Error,currentEstimates[1],currentEstimates[2],currentEstimates[3])))
 
