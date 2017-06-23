@@ -26,7 +26,7 @@ library(stringr)
 # depending on your directory structure and your data.
 
 # Provide the path.
-thisPath <- '/home/markg/Dropbox/AttentionalBlink/data'
+thisPath <- 'data/'
 
 # Provide a name for each sample,
 # so files can be read and written with corresponding filenames.
@@ -323,13 +323,13 @@ for (thisSample in 1:samplesToFit) {
                     mu <- par[2]
                     sigma <- par[3]
                     result <- pdf_normmixture_single(theseT1Error, p, mu, sigma)
-                    cat("p ", p, " mu ", mu, " sigma ", sigma, " result ", result, "\n")
+                    #cat("p ", p, " mu ", mu, " sigma ", sigma, " result ", result, "\n")
                     return(-exp(sum(log(result))))
                 }                
                 cat("parameterGuess", parameterGuess, "\n")
                 fit <- optim(parameterGuess, pdf_normmixture_single_par, lower=parameterLowerBound, upper=parameterUpperBound, control=list(trace=6), method="L-BFGS-B")
                 currentEstimates <- fit$par
-
+                print("currentEstimates=",currentEstimates)
                 # Compute the negative log likelihood of the fitted model.
                 thisNegLogLikelihood <- -sum(log(pdf_normmixture_single(theseT1Error,currentEstimates[1],currentEstimates[2],currentEstimates[3])))
 
@@ -350,7 +350,7 @@ for (thisSample in 1:samplesToFit) {
             # allT1LowerBounds_byParticipant[thisParticipant,thisLag,] <- bestEstimateCIs[1,]
             # allT1UpperBounds_byParticipant[thisParticipant,thisLag,] <- bestEstimateCIs[2,]
             allT1MinNegLogLikelihoods_byParticipant[thisParticipant,thisLag] <- minNegLogLikelihood
-
+            STOP
             # Plot the distributions if required.
             # if (plotFits){
             #     pFig <- figure('Color','white','Name',['Participant ' num2str(thisParticipant) ', Lag ' num2str(thisLag)])##ok<UNRCH>
